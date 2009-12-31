@@ -1,0 +1,51 @@
+/* Reshape the Body specifically for IE6... */
+body {
+	margin: 0px 0px 0px 0px;
+}
+
+div.borders {
+	margin: 0px;
+	width: 994px;
+}
+
+div.outside {
+	background: url();
+	width: 994px;
+}
+
+/* <=IE6 Doesn't Support PNG backgrounds...lose them */	
+div.topleft, div.topspan, div.topright, div.bottomleft, div.bottomspan, div.bottomright {
+	display: none;
+}
+
+div.wrapper div.nav, div.wrapper div.footer {
+	background: #6DBA07 url();
+}
+
+	/* PNG Fixer -- For Reg Images -- DO NOT EDIT */
+	* html img, * html .png {
+		position:relative;
+		behavior: expression((this.runtimeStyle.behavior="none")&&(this.pngSet?this.pngSet=true:(this.nodeName == "IMG" && this.src.toLowerCase().indexOf('.png')>-1?(this.runtimeStyle.backgroundImage = "none",
+		this.runtimeStyle.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" + this.src + "', sizingMethod='image')",
+		this.src = "images/transparent.gif"):(this.origBg = this.origBg? this.origBg :this.currentStyle.backgroundImage.toString().replace('url("','').replace('")',''),
+		this.runtimeStyle.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" + this.origBg + "', sizingMethod='crop')",
+		this.runtimeStyle.backgroundImage = "none")),this.pngSet=true)
+		);
+	}
+
+/* Reform the Website Listings */
+	div.wrapper div.content div.portfoliopage {
+		border: 2px solid #6e5504;
+		width: 910px;
+		margin: 0px 0px auto;
+		padding: 20px;
+		min-height: 150px;
+	}
+	
+	div.wrapper div.content div.portfoliopicture {
+		border: 2px solid #6e5504;
+		float: left;
+		margin-top: 0px;
+		margin-left: 0px;
+		margin-right: 20px;
+	}
