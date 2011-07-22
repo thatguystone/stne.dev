@@ -1,0 +1,37 @@
+safe:        false
+auto:        true
+server:      false
+server_port: 4000
+base-url:    /
+
+source:      .
+destination: ./_site
+plugins:     ./_plugins
+
+future:      true
+lsi:         false
+pygments:    true
+markdown:    rdiscount
+permalink:   /:categories/:year/:month/:title 
+
+date_format: "%d %b %Y"
+
+exclude:
+    - Makefile
+    - lib
+
+categories:
+    - projects
+
+title: Andrew Stone
+author: Andrew Stone
+
+js:
+    - harmony.js
+
+css:
+    - reset.css
+    - main.css
+    - pages.css
+    - syntax.css
+    

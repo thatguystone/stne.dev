@@ -1,0 +1,13 @@
+# Recent Posts
+<ul class="posts">
+	{% for post in site.posts limit:5 %}
+		<li>
+			<a href="{{ post.url }}">{{ post.title }}</a>
+			{% if post.summary %}
+				{{ post.summary }}
+			{% else %}
+				{{ post.content|strip_html|truncate:45 }}
+			{% endif %}
+		</li>
+	{% endfor %}
+</ul>
