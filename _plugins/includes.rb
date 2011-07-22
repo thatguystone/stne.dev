@@ -17,7 +17,7 @@ module Jekyll
         markup "/assets/#{name_with_ext}"
       else
         (assets_for_name.map do |asset|
-          markup asset
+          markup "/#{@type}/#{asset}"
         end).join("\n")
       end
     end
@@ -43,7 +43,7 @@ module Jekyll
     end
     
     def markup(src)
-      %{<script src="/js/#{src}" type="text/javascript"></script>}.to_s
+      %{<script src="#{src}" type="text/javascript"></script>}.to_s
     end  
   end
 
@@ -53,7 +53,7 @@ module Jekyll
     end
 
     def markup(src)
-      %{<link href="/css/#{src}" media="screen" rel="stylesheet" type="text/css" />}.to_s
+      %{<link href="#{src}" media="screen" rel="stylesheet" type="text/css" />}.to_s
     end
   end
 

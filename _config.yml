@@ -26,8 +26,22 @@ categories:
 title: Andrew Stone
 author: Andrew Stone
 
+nav_pages:
+    - name: Home
+      url: index
+    - name: Projects
+      url: projects
+    - name: About
+      url: about
+
 js:
     - harmony.js
+    - brushes/chrome.js
+    - brushes/circles.js
+    - brushes/longfur.js
+    - brushes/ribbon.js
+    - monkey/Array.js
+    - monkey/Object.js
 
 css:
     - reset.css

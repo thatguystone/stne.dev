@@ -1,9 +1,6 @@
 ---
 layout: default
 title: Home
-
-nav:
-    name: Home
 ---
 
 # clovar, by andrew stone

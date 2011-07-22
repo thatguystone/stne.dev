@@ -1,9 +1,6 @@
 ---
 layout: default
 title: About
-
-nav:
-    name: About
 ---
 
 # who is this andrew stone guy?

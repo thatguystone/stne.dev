@@ -1,9 +1,6 @@
 ---
 layout: default
 title: About
-
-nav:
-    name: Projects
 ---
 
 # {{ page.nav_name }}
