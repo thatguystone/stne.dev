@@ -1,3 +1,8 @@
+ol li {
+	list-style: decimal inside none;
+	margin-left: .5em;
+}
+
 .posts li {
 	margin: 5px;
 }
