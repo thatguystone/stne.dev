@@ -13,7 +13,7 @@ html {
 }
 
 body {
-	background: url(/img/bg.png) repeat-x center bottom fixed;
+	background: #f7f7f7;
 	min-height: 100%;
 	font-family: arial, sans-serif;
 }

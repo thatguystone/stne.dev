@@ -4,7 +4,7 @@
 (function($) {
 	//the brushses need these guys
 	BRUSH_SIZE = 1;
-	COLOR = [0,0,0];
+	COLOR = [62,97,29];
 	BRUSH_PRESSURE = 1;
 	brushes = {};
 	
@@ -14,7 +14,10 @@
 			$container = $("#header"),
 			height = $container.height(),
 			$canvas = $('<canvas class="drawing" height="' + height + '" />'),
-			context = $canvas[0].getContext('2d')
+			context = $canvas[0].getContext('2d'),
+			newBrush = function() {
+				brush = new brushes[Object.keys(brushes).shuffle()[0]](context);
+			}
 		;
 		
 		$window
@@ -44,11 +47,12 @@
 			})
 			.click(function() {
 				context.clearRect(0, 0, width, height);
+				newBrush();
 			})
 		;
 		
 		$container.append($canvas);
-		brush = new brushes[Object.keys(brushes).shuffle()[0]](context);
+		newBrush();
 	};
 	
 	$(init);
