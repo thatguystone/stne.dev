@@ -1,0 +1,47 @@
+html {
+	height: 100%;
+}
+
+body {
+	background: #f7f7f7;
+	min-height: 100%;
+	font-family: arial, sans-serif;
+}
+
+h1 {
+	font-size: 2em;
+	margin: 10px 0;
+	text-transform: lowercase;
+}
+
+h2 {
+	font-size: 1.5em;
+	margin: 5px 0;
+	text-transform: lowercase;
+}
+
+h3 {
+	font-size: 1.2em;
+	margin: 5px 0;
+	text-transform: lowercase;
+}
+
+p {
+	margin: 10px 0;
+	line-height: 1.5em;
+	padding: 2px;
+}
+
+em {
+	font-style: italic;
+}
+
+a,
+a:visited,
+a:active {
+	color: #1D2B00;
+}
+
+a:hover {
+	text-decoration: none;
+}

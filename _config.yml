@@ -33,6 +33,8 @@ nav_pages:
       url: projects
     - name: About
       url: about
+    - name: The Site
+      url: this-site
 
 js:
     - harmony.js
@@ -43,9 +45,11 @@ js:
     - brushes/ribbon.js
     - monkey/Array.js
     - monkey/Object.js
+    - cornify.js
 
 css:
     - reset.css
+    - tags.css
     - main.css
     - pages.css
     - syntax.css

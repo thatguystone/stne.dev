@@ -5,13 +5,14 @@ $(function() {
 	
 	var pushState,
 		$content = $("#content .body"),
+		$window = $(window),
 		load = function(url) {
 			//don't allow the same page to load again
 			if (url == window.location.pathname) {
 				return;
 			}
 		
-			$content.fadeTo('slow', .5);
+			$content.stop().fadeTo('slow', .5);
 			$.ajax({
 				url: url,
 				success: function(data) {
@@ -33,6 +34,7 @@ $(function() {
 				},
 				complete: function() {
 					$content.stop().fadeTo('slow', 1);
+					$window.scrollTop(0);
 				}
 			});
 		}

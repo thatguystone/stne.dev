@@ -3,38 +3,7 @@ layout: nil
 
 border_color: "#c9c9c9"
 page_width: 500px
-
-link_color: "#000000"
-link_color_hover: "#2f472a"
 ---
-
-html {
-	height: 100%;
-}
-
-body {
-	background: #f7f7f7;
-	min-height: 100%;
-	font-family: arial, sans-serif;
-}
-
-h1 {
-	font-size: 2em;
-	margin: 10px 0;
-	text-transform: lowercase;
-}
-
-h2 {
-	font-size: 1.5em;
-	margin: 5px 0;
-	text-transform: lowercase;
-}
-
-p {
-	margin: 10px 0;
-	line-height: 1.5em;
-	padding: 2px;
-}
 
 #header {
 	background: url(/img/header/bg.png) repeat-x;
@@ -64,7 +33,7 @@ p {
 	#content .header {
 		border-bottom: 1px solid {{ page.border_color }};
 		height: 35px;
-		line-height: 35px;
+		line-height: 31px;
 		margin-top: -16px; /** 15px for padding + 1 for border */
 		margin-bottom: 15px;
 		padding-top: 5px;
@@ -72,10 +41,19 @@ p {
 	
 		#content .header li {
 			float: left;
+			border-right: 1px solid #f0f0f0;
+		}
+		
+		#content .header li:last-child {
+			border-right: 0;
+		}
+		
+		#content .header li:hover {
+			background: #fbfbfb;
 		}
 	
 		#content .header a {
-			color: {{ page.link_color }};
+			color: #000000;
 			display: block;
 			font-variant: small-caps;
 			padding: 0 5px;
@@ -83,7 +61,7 @@ p {
 		}
 	
 		#content .header a:hover {
-			color: {{ page.link_color_hover }};
+			color: #2f472a;
 			text-decoration: underline;
 		}
 
