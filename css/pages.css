@@ -3,6 +3,16 @@ ol li {
 	margin-left: .5em;
 }
 
+
+ul li {
+	list-style: disc inside none;
+	margin-left: .5em;
+}
+
+ul.posts li {
+	list-style: none;
+}
+
 .posts li {
 	margin: 5px;
 }

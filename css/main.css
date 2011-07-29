@@ -40,8 +40,9 @@ page_width: 500px
 	}
 	
 		#content .header li {
-			float: left;
 			border-right: 1px solid #f0f0f0;
+			float: left;
+			list-style: none;
 		}
 		
 		#content .header li:last-child {

@@ -12,7 +12,7 @@ future:      true
 lsi:         false
 pygments:    true
 markdown:    rdiscount
-permalink:   /:categories/:year/:month/:title/
+permalink:   /stash/:categories/:year/:month/:title/
 
 date_format: "%d %b %Y"
 

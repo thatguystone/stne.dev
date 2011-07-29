@@ -1,0 +1,75 @@
+---
+layout: post
+title: Playing with Blocks
+
+categories: linux
+
+summary: How to deal with bad blocks on Linux.
+---
+
+So, it turns out today that my external hard drive has a few bad blocks on it, and since it's
+mainly used as an archive, I feel no pressing need to replace it (stupid, yes, I know).  But until
+I get some more external backup space, I'm just going to mark some bad blocks and move on with it.
+Since this is something that we will all hit at some point, here are the basic steps:
+
+## What're we gonna do, chief?
+
+Well, cadet, we're going to scan the entire drive.  "The entire drive?!", you say.  Yes, the entire
+drive.  It's a few simple, easy, quick steps (for you, not the computer), so buckle down and let's
+find and annihilate the bad blocks!
+
+### Assumptions
+
+* The partition having trouble is /dev/sda1.  Adjust to suit your needs.
+* You have root access.
+
+## ext2/3/4
+
+For these file systems, it's really simple to do this:
+
+{% highlight bash %}
+#$ e2fsck -c -c -k -C 0 /dev/sda1
+{% endhighlight %}
+
+## resiserfs
+
+Well, this is a bit more involved, but it comes with a lot more satisfaction (and nerd points).
+
+### Find that block size
+
+First, we need to find out our blocksize so that we can do a proper scan of the hard drive
+to find bad blocks. Using one of the following, determine your block size:
+
+{% highlight bash %}
+$# tune2fs -l /dev/sda1 | grep -i "block size"
+Block size: 4096
+
+$# dumpe2fs -h /dev/sda1 | grep "Block size:"
+Block size: 4096
+
+$# blockdev –getbsz /dev/sda1
+4096
+{% endhighlight %}
+
+### Scan that drive
+
+This one is really simple.  Be sure to substitute your drive and block size appropriately.
+
+Be sure you have days to spare for large drives.
+
+{% highlight bash %}
+$# badblocks -n -b 4096 -o badblocks /dev/sda1
+{% endhighlight %}
+
+Here's what's going on:
+
+1. -n: run in read-write, non-destructive mode (your data will be safe)
+1. -b 4096: your block size
+1. -o badblocksfile: where to store the list of bad blocks
+1. /dev/sda1: the partition to scan
+
+### Annihilate those bad blocks
+
+{% highlight bash %}
+$# reiserfsck --fix-fixable --badblocks badblocks /dev/sda1
+{% endhighlight %}

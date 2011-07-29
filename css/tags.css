@@ -8,22 +8,24 @@ body {
 	font-family: arial, sans-serif;
 }
 
-h1 {
-	font-size: 2em;
+h1,
+h2,
+h3 {
 	margin: 10px 0;
 	text-transform: lowercase;
 }
 
+h1 {
+	font-size: 2em;
+}
+
 h2 {
 	font-size: 1.5em;
-	margin: 5px 0;
-	text-transform: lowercase;
 }
 
 h3 {
 	font-size: 1.2em;
-	margin: 5px 0;
-	text-transform: lowercase;
+	font-weight: 600;
 }
 
 p {

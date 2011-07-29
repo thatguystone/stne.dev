@@ -21,7 +21,8 @@ $(function() {
 					var $page = $("<div />").append(data.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''));
 					
 					//inject the response into the body
-					$content.html($page.find("#content .body"));
+					//two chained finds is substantially faster than 1 big selector
+					$content.html($page.find("#content").find(".body"));
 					
 					//set the title
 					document.title = $page.find("title").text();
