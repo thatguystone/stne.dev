@@ -46,6 +46,7 @@ js:
     - monkey/Array.js
     - monkey/Object.js
     - cornify.js
+    - tracking.js
 
 css:
     - reset.css
