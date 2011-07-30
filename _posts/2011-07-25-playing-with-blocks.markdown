@@ -71,5 +71,6 @@ Here's what's going on:
 ### Annihilate those bad blocks
 
 {% highlight bash %}
-$# reiserfsck --fix-fixable --badblocks badblocks /dev/sda1
+$# reiserfsck --fix-fixable \
+	--badblocks badblocks /dev/sda1
 {% endhighlight %}
