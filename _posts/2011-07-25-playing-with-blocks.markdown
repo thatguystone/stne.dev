@@ -12,6 +12,16 @@ mainly used as an archive, I feel no pressing need to replace it (stupid, yes, I
 I get some more external backup space, I'm just going to mark some bad blocks and move on with it.
 Since this is something that we will all hit at some point, here are the basic steps:
 
+## warning!
+
+If your drive has bad blocks that the operating system can see, then chances are it's time for a new
+drive. Typically, the drive will transparently remap bad sectors when its finds them, so if you're seeing
+bad blocks, that is really bad news. Though you can prolong the life of your drive by adding these blocks
+to the bad block list in your filesystem, it is almost always better (in the short and long run) to
+get a new drive. You'll save yourself hours (sometimes days) of scanning the drive, and the looming
+threat of a dead drive will be gone. Do yourself a favor: get a new drive. But if you can't...here
+we go.
+
 ## What're we gonna do, chief?
 
 Well, cadet, we're going to scan the entire drive.  "The entire drive?!", you say.  Yes, the entire
