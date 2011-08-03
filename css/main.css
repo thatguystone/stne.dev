@@ -43,6 +43,8 @@ page_width: 500px
 			border-right: 1px solid #f0f0f0;
 			float: left;
 			list-style: none;
+			margin: 0;
+			padding: 0 .5em;
 		}
 		
 		#content .header li:last-child {

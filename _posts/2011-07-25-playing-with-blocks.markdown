@@ -38,7 +38,7 @@ find and annihilate the bad blocks!
 For these file systems, it's really simple to do this:
 
 {% highlight bash %}
-#$ e2fsck -c -c -k -C 0 /dev/sda1
+$# e2fsck -c -c -k -C 0 /dev/sda1
 {% endhighlight %}
 
 ## resiserfs
