@@ -4,7 +4,7 @@ title: Playing with Blocks
 
 categories: linux
 
-summary: How to deal with bad blocks on Linux.
+summary: How to repair bad blocks in a Linux filesystem.
 ---
 
 So, it turns out today that my external hard drive has a few bad blocks on it, and since it's

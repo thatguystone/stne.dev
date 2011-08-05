@@ -1,12 +1,12 @@
 ol li {
-	list-style: decimal inside none;
-	margin-left: .5em;
+	list-style: decimal outside none;
+	margin-left: 2.3em;
 }
 
 
 ul li {
-	list-style: disc inside none;
-	margin-left: .5em;
+	list-style: disc outside none;
+	margin-left: 2.3em;
 }
 
 ul.posts li {
@@ -15,6 +15,21 @@ ul.posts li {
 
 .posts li {
 	margin: 5px;
+}
+
+.posts .summary {
+	margin-left: 10px;
+	overflow: hidden;
+	position: relative;
+	white-space: nowrap;
+}
+
+.posts .summary .fade {
+	background: url(/img/fade.png) repeat-y;
+	right: 0;
+	height: 100%;
+	position: absolute;
+	width: 15px;
 }
 
 .date {
