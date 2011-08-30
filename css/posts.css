@@ -1,0 +1,12 @@
+h1.postTitle.withSummary {
+	margin-bottom: 0;
+}
+
+h6.postSummary {
+	font-size: 10px;
+	font-style: italic;
+}
+
+.date {
+	font-size: .7em;
+}
