@@ -6,10 +6,8 @@ title: About
 # Who is this Andrew Stone guy?
 
 Well, you're probably most interested in the me I am now: presently, I'm working with a little
-company called Clear Channel Communications on a super-secret project
-([you might have heard of it](http://www.mtv.com/news/articles/1667041/lady-gaga-coldplay-i-heart-music-festival.jhtml)).
-Technically, I work for a company called Boyle Software, and Clear Channel is one of our clients,
-but the details don't matter.
+company called Clear Channel on their new [iHeartRadio](http://www.iheart.com/) web app. We have a few
+other super-secret projects in the works, so keep a watch out for those announcements.
 
 These days, I spend a great deal of my time working in javascript (quite the crazy little language,
 if I do say so myself), and by night, I work in whatever language I feel like.  Take, for example,
