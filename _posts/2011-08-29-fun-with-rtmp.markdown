@@ -42,7 +42,7 @@ while [ true ]; do
 done
 {% endhighlight %}
 
-To kill it, issue Ctrl+\\.
+To kill it, issue Ctrl+z, kill %1 (or whatever job it is).
 
 ## Note
 
