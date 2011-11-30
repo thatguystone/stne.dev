@@ -6,9 +6,10 @@ $(function() {
 	var pushState,
 		$content = $("#content .body"),
 		$window = $(window),
-		load = function(url) {
+		load = function(url, ignoreState) {
 			//don't allow the same page to load again
-			if (url == window.location.pathname) {
+			//need to allow the request to go through on history.back()
+			if (!ignoreState && url == window.location.pathname) {
 				return;
 			}
 		
@@ -28,7 +29,8 @@ $(function() {
 					document.title = $page.find("title").text();
 					
 					//and use the fancy pushState stuff
-					window.history.pushState(null, null, url);
+					//unless we're going back in history
+					ignoreState || window.history.pushState(null, null, url);
 				},
 				error: function(data) {
 					$content.html("Aww, snap!  I can't load that page for you!  <a href='" + url + "'>Try again?</a>");
@@ -42,7 +44,7 @@ $(function() {
 	;
 	
 	$(window).bind('popstate', function(e) {
-		load(e.target.location.href);
+		load(document.location.pathname, true);
 	});
 	
 	$("a:not([href^='http'])").live('click', function() {
