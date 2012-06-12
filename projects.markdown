@@ -10,6 +10,9 @@ title: Projects
 This was a research project I did back in school.  It translates German verb tenses into their English
 counterparts.
 
+## [svnstash]({% post_url 2011-11-05-svnstash %})
+
+A quick-fix for getting `git stash` in SVN.
 
 ## [Star Trek: The Next Rescue](https://github.com/thatguystone/star-trek-the-next-rescue/)
 
