@@ -1,4 +1,4 @@
-JEKYLL=../jekyll/bin/jekyll
+JEKYLL=jekyll
 
 all:
 	$(JEKYLL) --server

@@ -11,7 +11,6 @@ plugins:     ./_plugins
 future:      true
 lsi:         false
 pygments:    true
-markdown:    rdiscount
 permalink:   /stash/:categories/:year/:month/:title/
 
 date_format: "%d %b %Y"

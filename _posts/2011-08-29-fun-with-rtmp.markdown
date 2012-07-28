@@ -37,12 +37,10 @@ $# iptables -t nat -D OUTPUT -p tcp --dport 1935 \
 The following command will create the RTMP interceptor and respawn it once it downloads a stream completely.
 
 {% highlight bash %}
-while [ true ]; do
-	sudo rtmpsrv 2> /dev/null
-done
+sudo rtmpsuck
 {% endhighlight %}
 
-To kill it, issue Ctrl+z, kill %1 (or whatever job it is).
+To kill it, issue Ctrl+c, and you're good.
 
 ## Note
 
