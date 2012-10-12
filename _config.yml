@@ -30,6 +30,8 @@ nav_pages:
       url: index
     - name: Projects
       url: projects
+    - name: Posts
+      url: posts
     - name: About
       url: about
     - name: The Site

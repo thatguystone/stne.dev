@@ -10,3 +10,7 @@ h6.postSummary {
 .date {
 	font-size: .7em;
 }
+
+.posts .date {
+	color: #c9c9c9;
+}
