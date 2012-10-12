@@ -4,6 +4,7 @@ $(function() {
 	}
 	
 	var pushState,
+		firstLoad = true,
 		$content = $("#content .body"),
 		$window = $(window),
 		load = function(url, ignoreState) {
@@ -44,7 +45,8 @@ $(function() {
 	;
 	
 	$(window).bind('popstate', function(e) {
-		load(document.location.pathname, true);
+		load(document.location.pathname, !firstLoad);
+		firstLoad = false;
 	});
 	
 	$("a:not([href^='http'])").live('click', function() {
