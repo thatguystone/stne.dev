@@ -5,9 +5,9 @@ source:      .
 destination: ./_site
 plugins:     ./_plugins
 
-future:      true
 lsi:         false
-pygments:    true
+highlighter: pygments
+markdown:    kramdown
 permalink:   /stash/:categories/:year/:month/:title/
 
 date_format: "%d %b %Y"
