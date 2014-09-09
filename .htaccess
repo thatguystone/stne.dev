@@ -1,6 +1,0 @@
-<IfModule mod_expires.c>
-	ExpiresActive on
-	ExpiresDefault "access plus 1 day"
-</IfModule>
-
-AddDefaultCharset utf-8
