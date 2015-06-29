@@ -1,8 +1,0 @@
----
-layout: default
-title: 404
----
-
-# Well, that shouldn't have happened
-
-How did you manage to find something that doesn't exist?  But still, you found it!  Congrats.

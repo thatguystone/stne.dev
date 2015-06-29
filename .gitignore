@@ -1,2 +1,4 @@
-_site
-/*.sublime*
+*.pyc
+__pycache__/
+public/
+ve/
