@@ -20,14 +20,14 @@ You're going to need the following:
 First, in order to capture RTMP streams, you're going to need to redirect the traffic to something you can intercept (ie.
 back to your machine). Since you're using Linux, this is incredibly simple:
 
-{% highlight bash %}
+{% highlight "bash" %}
 $# iptables -t nat -A OUTPUT -p tcp --dport 1935 \
 	 -m owner \! --uid-owner root -j REDIRECT
 {% endhighlight %}
 
 To delete the iptables rule:
 
-{% highlight bash %}
+{% highlight "bash" %}
 $# iptables -t nat -D OUTPUT -p tcp --dport 1935 \
 	-m owner \! --uid-owner root -j REDIRECT
 {% endhighlight %}
@@ -36,7 +36,7 @@ $# iptables -t nat -D OUTPUT -p tcp --dport 1935 \
 
 The following command will create the RTMP interceptor and respawn it once it downloads a stream completely.
 
-{% highlight bash %}
+{% highlight "bash" %}
 sudo rtmpsuck
 {% endhighlight %}
 

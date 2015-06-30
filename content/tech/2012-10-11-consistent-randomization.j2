@@ -21,7 +21,7 @@ At first, this seems like an untenable position, but consider it a bit deeper: w
 
 Cryptographic hashing algorithms were specifically designed so that their return values represent a uniform distribution of possible values over its output range. For this algorithm, we'll use one of the best-known hashing algorithms out there: MD5 (128 bits). Honestly, the algorithm itself it far shorter than even this sentence. Let's see it:
 
-{% highlight python %}
+{% highlight "python" %}
 import hashlib
 
 class ConsistentDecision(object):
@@ -32,7 +32,7 @@ class ConsistentDecision(object):
     def __init__(self, percentage):
         # The percentage of values to select
         self.perc = int(percentage)
-    
+
     def ask(self, value):
         return (int(hashlib.md5(str(value))
             .hexdigest(), 16) % 100) < self.perc

@@ -1,47 +1,24 @@
-#!/usr/bin/env python
+import webassets
 
-AUTHOR = 'Andrew Stone'
-SITENAME = 'Andrew Stone'
+TITLE = 'Andrew Stone'
 SITEURL = ''
 
-PORT = 8000
+DEBUG = True
+DEBUG_PORT = 8000
 
-PATH = 'content/'
-PUB_PATH = 'public/'
-PLUGINS_PATH = 'plugins/'
+ASSETS_DIR = 'assets/'
+CONTENT_DIR = 'content/'
+TEMPLATE_DIR = 'templates/'
 
-TIMEZONE = 'America/New_York'
+PUBLIC_DIR = 'public/'
 
-DEFAULT_LANG = 'en'
-
-# Feed generation is usually not desired when developing
-FEED_ALL_ATOM = None
-CATEGORY_FEED_ATOM = None
-TRANSLATION_FEED_ATOM = None
-AUTHOR_FEED_ATOM = None
-AUTHOR_FEED_RSS = None
-
-PLUGINS = [
-	'plugins.webassets',
-]
-
-EXTRA_PATH_METADATA = {
-    'extra/robots.txt': {'path': 'robots.txt'},
-    'extra/favicon.ico': {'path': 'favicon.ico'}
+ASSETS = {
+	'js': webassets.Bundle(
+		'js/main.js',
+		filters='closure_js',
+		output='all.js'),
+	'css': webassets.Bundle(
+		'css/main.scss',
+		filters='pyscss,cssmin',
+		output='all.css'),
 }
-STATIC_PATHS = EXTRA_PATH_METADATA.keys()
-
-# Blogroll
-LINKS = (('Pelican', 'http://getpelican.com/'),
-         ('Python.org', 'http://python.org/'),
-         ('Jinja2', 'http://jinja.pocoo.org/'),
-         ('You can modify those links in your config file', '#'),)
-
-# Social widget
-SOCIAL = (('You can add links in your config file', '#'),
-          ('Another social link', '#'),)
-
-DEFAULT_PAGINATION = 10
-
-# Uncomment following line if you want document-relative URLs when developing
-#RELATIVE_URLS = True

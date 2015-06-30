@@ -37,7 +37,7 @@ find and annihilate the bad blocks!
 
 For these file systems, it's really simple to do this:
 
-{% highlight bash %}
+{% highlight "bash" %}
 $# e2fsck -c -c -k -C 0 /dev/sda1
 {% endhighlight %}
 
@@ -50,7 +50,7 @@ Well, this is a bit more involved, but it comes with a lot more satisfaction (an
 First, we need to find out our blocksize so that we can do a proper scan of the hard drive
 to find bad blocks. Using one of the following, determine your block size:
 
-{% highlight bash %}
+{% highlight "bash" %}
 $# tune2fs -l /dev/sda1 | grep -i "block size"
 Block size: 4096
 
@@ -67,7 +67,7 @@ This one is really simple.  Be sure to substitute your drive and block size appr
 
 Be sure you have days to spare for large drives.
 
-{% highlight bash %}
+{% highlight "bash" %}
 $# badblocks -n -b 4096 -o badblocks /dev/sda1
 {% endhighlight %}
 
@@ -80,7 +80,7 @@ Here's what's going on:
 
 ### Annihilate those bad blocks
 
-{% highlight bash %}
+{% highlight "bash" %}
 $# reiserfsck --fix-fixable \
 	--badblocks badblocks /dev/sda1
 {% endhighlight %}

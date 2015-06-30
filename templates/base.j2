@@ -1,0 +1,16 @@
+<head>
+{% block head %}
+	{% assets "css" %}
+		<link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" />
+	{% endassets %}
+{% endblock %}
+</head>
+
+<body>
+{% block body %}
+{% endblock %}
+</body>
+
+{% assets "js" %}
+	<script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}

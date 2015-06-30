@@ -1,40 +1,31 @@
-#! /usr/bin/env python
+#! ve/bin/python
 
 import argparse
 import http.server
 import importlib
 import os
 import sys
+import traceback
 
-import pelican
-import pelican.server
 import watchdog.events
 import watchdog.observers
 
 class Builder(watchdog.events.FileSystemEventHandler):
-	def __init__(self, conf_file, conf):
-		self.conf_file = conf_file
+	def __init__(self, conf):
 		self.conf = conf
 
 	def on_any_event(self, event):
 		print("Change detected, rebuilding...")
-
-		if event.src_path.startswith(self.conf.PLUGINS_PATH):
-			for plugin in self.conf.PLUGINS:
-				p = importlib.import_module(plugin)
-				importlib.reload(p)
-
 		self.build()
 
 	def build(self):
-		sys.argv = [
-			'-r', self.conf.PATH,
-			'-o', self.conf.PUB_PATH,
-			'-s', self.conf_file]
+		import stas
+		importlib.reload(stas)
+
 		try:
-			pelican.main()
-		except Exception as e:
-			print("failed to build site:", e)
+			stas.Stas(self.conf).build()
+		except:
+			traceback.print_exc()
 
 class Reloader(watchdog.events.FileSystemEventHandler):
 	def __init__(self, conf_file, server):
@@ -42,18 +33,15 @@ class Reloader(watchdog.events.FileSystemEventHandler):
 		self.server = server
 
 	def on_any_event(self, event):
-		if self.conf_file in event.src_path:
-			print("Config change detected, reloading...")
+		if self.conf_file in event.src_path or 'stas.py' in event.src_path:
+			print("Python change detected, reloading...")
 			self.server.shutdown()
 
-class RequestHandler(pelican.server.ComplexHTTPRequestHandler):
+class RequestHandler(http.server.SimpleHTTPRequestHandler):
 	allow_reuse_address = True
 
-	def log_message(self, format, *args):
-		return
-
 	def do_GET(self):
-		self.path = os.path.join(self.conf.PUB_PATH, '.' + self.path)
+		self.path = os.path.join(self.conf.PUBLIC_DIR, '.' + self.path)
 		super().do_GET()
 
 def main(debug):
@@ -65,23 +53,24 @@ def main(debug):
 	conf = importlib.import_module(conf_mod)
 	importlib.reload(conf)
 
-	builder = Builder(conf_file, conf)
+	builder = Builder(conf)
 	builder.build()
 
 	if not debug:
 		return
 
 	RequestHandler.conf = conf
-	server = http.server.HTTPServer(('', conf.PORT), RequestHandler)
+	server = http.server.HTTPServer(('', conf.DEBUG_PORT), RequestHandler)
 	reloader = Reloader(conf_file, server)
 
 	observer = watchdog.observers.Observer()
-	observer.schedule(builder, conf.PATH)
-	observer.schedule(builder, conf.PLUGINS_PATH)
+	observer.schedule(builder, conf.CONTENT_DIR)
+	observer.schedule(builder, conf.TEMPLATE_DIR)
+	observer.schedule(builder, conf.ASSETS_DIR)
 	observer.schedule(reloader, '.')
 	observer.start()
 
-	sys.stderr.write('Serving on port {0} ...\n'.format(conf.PORT))
+	sys.stderr.write('Serving on port {0} ...\n'.format(conf.DEBUG_PORT))
 	server.serve_forever()
 	server.socket.close()
 	observer.stop()
