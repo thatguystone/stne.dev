@@ -10,6 +10,12 @@ import jinja2
 import markdown
 import webassets
 
+IMG_EXTS = [
+	'.gif',
+	'.jpg',
+	'.png',
+]
+
 # Only set from pool processes
 jinja = None
 
@@ -36,7 +42,9 @@ class Stas(object):
 			cpus = multiprocessing.cpu_count()
 			pool = multiprocessing.Pool(cpus * 2,
 				self._worker_init, (jinja, ))
-			self._build(pool)
+
+			cats, imgs, blobs = self._load_pages(pool)
+			self._build_pages(cats, pool)
 		finally:
 			pool.terminate()
 			pool.join()
@@ -60,21 +68,57 @@ class Stas(object):
 	def _safe_markdown(self, text):
 		return jinja2.Markup(markdown.markdown(text))
 
-	def _build(self, pool):
-		jobs = []
+	def _load_pages(self, pool):
+		page_jobs = []
+		img_jobs = []
+
+		cats = {}
+		imgs = []
+		blobs = []
 
 		path = pathlib.Path(self.conf['CONTENT_DIR'])
-		for f in path.glob('**/*.j2'):
-			jobs.append(pool.apply_async(_read, (self.conf, f, )))
+		for f in path.glob('**/*'):
+			if f.suffix == '.j2':
+				page_jobs.append(pool.apply_async(
+					_load_page,
+					(self.conf, f, )))
+			elif f.suffix in IMG_EXTS:
+				img_jobs.append(pool.apply_async(
+					_load_img,
+					(f, )))
+			else:
+				blobs.append(f)
+
+		for job in page_jobs:
+			p = job.get()
+			cat = cats.setdefault(p.category, [])
+			cat.append(p)
+
+		for job in img_jobs:
+			imgs.append(job.get())
+
+		return cats, imgs, blobs
+
+	def _build_pages(self, cats, pool):
+		jobs = []
+
+		for pages in cats.values():
+			for page in pages:
+				jobs.append(pool.apply_async(
+					_build_page,
+					(self.conf, page, cats, )))
 
 		for job in jobs:
 			job.get()
 
 class Page(object):
-	def __init__(self, conf, file):
+	def __init__(self, conf, file, fm):
+		self.content = fm.content
+		self.metadata = fm.metadata
+
 		if len(file.parts) == 2:
 			self.name = file.stem
-			self.category = ''
+			self.category = '__page'
 
 			if self.name == 'index':
 				self.dst = '%s/index.html' % conf['PUBLIC_DIR']
@@ -107,33 +151,40 @@ class Page(object):
 
 		self.dst += '/index.html'
 
-def _read(conf, file):
+class Image(object):
+	def __init__(self, file):
+		self.file = file
+
+def _load_page(conf, file):
+	with file.open() as f:
+		content = f.read()
+
+	fm = frontmatter.loads(content)
+	return Page(conf, file, fm)
+
+def _build_page(conf, page, cats):
 	try:
-		p = Page(conf, file)
-
-		with file.open() as f:
-			content = f.read()
-
-		page = frontmatter.loads(content)
 		tmpl = jinja.from_string(page.content)
 
 		content = tmpl.render(
 			conf=conf,
-			page=p,
-			meta=page.metadata)
+			page=page,
+			meta=page.metadata,
+			cats=cats)
 
 		if not conf['DEBUG']:
 			content = htmlmin.minify(content,
 				remove_comments=True,
 				reduce_boolean_attributes=True)
 
-		os.makedirs(os.path.dirname(p.dst), exist_ok=True)
-		with open(p.dst, 'w') as f:
+		os.makedirs(os.path.dirname(page.dst), exist_ok=True)
+		with open(page.dst, 'w') as f:
 			f.write(content)
-
-		return p
 
 	except Exception as e:
 		# Wrap all exceptions: there are issues with pickling and custom
-		# exceptions
+		# exceptions from jinja
 		raise Exception(str(e))
+
+def _load_img(file):
+	return Image(file)
