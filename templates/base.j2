@@ -1,4 +1,4 @@
-{% import "_macros.j2" as macro with context %}
+{% import "_macros.j2" as macros with context %}
 
 <head>
 	<title>Andrew Stone</title>
@@ -20,12 +20,26 @@
 			</ul>
 		</nav>
 
-		<div class="hero"></div>
+		{% block hero %}{% endblock %}
 	</header>
 
 	<section class="content">
-		{% block body %}{% endblock %}
+		<!-- >8 stas-content -->
+			{% block content %}{% endblock %}
+		<!-- end-content 8< -->
 	</section>
+
+	<footer>
+		<ul>
+			<li>© {{ now("%Y") }} Andrew Stone</li>
+			<li>|</li>
+			<li><a href="https://github.com/thatguystone">GitHub</a></li>
+			<li>|</li>
+			<li><a href="https://github.com/thatguystone/stoney.io">Site Source</a></li>
+			<li>|</li>
+			<li><a href="mailto:a@stoney.io">a@astoney.io</a></li>
+		</ul>
+	</footer>
 </body>
 
 {% assets "js" %}

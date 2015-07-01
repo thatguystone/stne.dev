@@ -6,3 +6,9 @@
 	/>
 
 {% endmacro %}
+
+{% macro highlight(lang) %}
+
+<pre><code class="{{ lang }}">{{ caller() }}</code></pre>
+
+{% endmacro %}

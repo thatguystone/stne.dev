@@ -45,14 +45,7 @@ class Stas(object):
 			filters=['pyscss', CSSFilter(self.conf), 'cssmin'],
 			output='all.css'))
 
-		jinja = jinja2.Environment(
-			loader=jinja2.FileSystemLoader(self.conf['TEMPLATE_DIR']),
-			extensions=[
-			'webassets.ext.jinja2.AssetsExtension',
-			'jinja2_highlight.HighlightExtension'])
-		jinja.filters['markdown'] = self._filter_markdown
-		jinja.filters['img'] = self._filter_img
-		jinja.assets_environment = assets
+		jinja = Jinja.init(self.conf, assets)
 
 		try:
 			cpus = multiprocessing.cpu_count()
@@ -87,25 +80,6 @@ class Stas(object):
 		global jinja
 		jinja = j
 
-	def _filter_markdown(self, text):
-		return jinja2.Markup(markdown.markdown(text))
-
-	@jinja2.contextfilter
-	def _filter_img(self, ctx, src, width=0, height=0, crop='', ext=''):
-		to = str(ctx['page'].src.parent) + '/' + src
-		to = os.path.normpath(to)
-
-		try:
-			img = ctx['imgs'].get(to)
-			out_path = img.scale(width, height, crop, ext)
-
-			rel = os.path.relpath(str(out_path), str(ctx['page'].dst.parent))
-			mtime = str(img.stat.st_mtime).encode('utf-8')
-
-			return rel + '?%s' % hashlib.md5(mtime).hexdigest()[:8]
-		except KeyError:
-			raise Exception('img %s does not exist' % to)
-
 	def _load_pages(self, pool):
 		page_jobs = []
 		img_jobs = []
@@ -138,8 +112,8 @@ class Stas(object):
 	def _build_pages(self, pages, imgs, jobs, pool):
 		for page in pages.iter():
 			jobs.append(pool.apply_async(
-				_build_page,
-				(self.conf, page, pages, imgs, )))
+				page.build,
+				(pages, imgs, )))
 
 	def _copy_blobs(self, blobs, jobs, pool):
 		for blob in blobs:
@@ -162,23 +136,20 @@ class CSSFilter(webassets.filter.Filter):
 		sheet = _in.read()
 		for url in URLRE.findall(sheet):
 			path = url.replace('"', '').replace("'", '')
-			if not path.startswith("assets/"):
+			if not path.startswith("/assets/"):
 				continue
 
-			scaled = self.scale(path)
+			scaled = self.scale(path[1:])
 			sheet = sheet.replace(url, '"%s"' % scaled)
 
 		out.write(sheet)
 
 	def scale(self, url):
 		parts = url.split(':')
-		img = Image(None, pathlib.Path(parts[0]), None)
-		abs_url = '/' + parts[0]
-		img.dst = pathlib.Path(self.conf['PUBLIC_DIR'] + '/' + abs_url)
+		img = Image(self.conf, pathlib.Path(parts[0]), None)
 
 		if len(parts) == 1:
-			img.scale(0, 0, False, None)
-			return abs_url
+			return img.scale(0, 0, False, None)
 
 		size = parts[1]
 		parts = size.split('@')
@@ -196,7 +167,7 @@ class CSSFilter(webassets.filter.Filter):
 		width = int(sizes[0]) * mul
 		height = int(sizes[1]) * mul
 
-		return '/' + '/'.join(img.scale(width, height, crop, None).parts[1:])
+		return img.scale(width, height, crop, None)
 
 class Pages(object):
 	def __init__(self):
@@ -214,12 +185,37 @@ class Pages(object):
 class Page(object):
 	def __init__(self, conf, file, fm):
 		self.src = file
+		self.conf = conf
 		self.content = fm.content
 		self.metadata = fm.metadata
 
 		self.name, self.category, self.dst = _determine_dest(
 			conf, file,
 			is_page=True)
+
+	def build(self, pages, imgs):
+		try:
+			tmpl = jinja.from_string(self.content)
+
+			content = tmpl.render(
+				conf=self.conf,
+				page=self,
+				pages=pages,
+				imgs=imgs,)
+
+			if not self.conf['DEBUG']:
+				content = htmlmin.minify(content,
+					remove_comments=True,
+					reduce_boolean_attributes=True)
+
+			_makedirs(self.dst)
+			with self.dst.open('w') as f:
+				f.write(content)
+
+		except Exception as e:
+			# Wrap all exceptions: there are issues with pickling and custom
+			# exceptions from jinja
+			raise Exception(str(e))
 
 class Images(object):
 	def __init__(self):
@@ -241,8 +237,8 @@ class Image(object):
 		else:
 			self.metadata = {}
 
-		if conf:
-			self.name, self.category, self.dst = _determine_dest(conf, file)
+		self.name, self.category, self.dst = _determine_dest(conf, file)
+		self.abs = pathlib.Path('/' + '/'.join(self.dst.parts[1:]))
 
 	def _changed(self, dst):
 		try:
@@ -265,7 +261,7 @@ class Image(object):
 			if self._changed(self.dst):
 				_makedirs(self.dst)
 				shutil.copyfile(str(self.src), str(self.dst))
-			return self.dst
+			return self.abs
 
 		dims = '%dx%d' % (width, height)
 		scale_dims = dims
@@ -274,7 +270,8 @@ class Image(object):
 			suffix += 'c'
 			scale_dims += '^'
 
-		dst = self.dst.with_name('%s.%s%s' % (self.dst.stem, suffix, ext))
+		final_name = '%s.%s%s' % (self.dst.stem, suffix, ext)
+		dst = self.dst.with_name(final_name)
 		if self._changed(dst):
 			args = [
 				'convert',
@@ -284,14 +281,46 @@ class Image(object):
 			if crop:
 				args += ['-gravity', 'center', '-extent', dims]
 
-			_makedirs(self.dst)
+			_makedirs(dst)
 			status = subprocess.call(args + [str(dst)])
 			if status:
 				raise Exception('failed to scale image %s' % self.src)
 
 			os.utime(str(dst), (0, self.stat.st_mtime))
 
-		return dst
+		return self.abs.with_name(final_name)
+
+class Jinja(object):
+	def init(conf, assets):
+		jinja = jinja2.Environment(
+			loader=jinja2.FileSystemLoader(conf['TEMPLATE_DIR']),
+			extensions=[
+			'webassets.ext.jinja2.AssetsExtension',
+			'jinja2_highlight.HighlightExtension'])
+		jinja.filters['markdown'] = Jinja._filter_markdown
+		jinja.filters['img'] = Jinja._filter_img
+		jinja.assets_environment = assets
+
+		jinja.globals['now'] = Jinja._now
+
+		return jinja
+
+	def _now(format):
+		return datetime.datetime.now().strftime(format)
+
+	def _filter_markdown(text):
+		return jinja2.Markup(markdown.markdown(text))
+
+	@jinja2.contextfilter
+	def _filter_img(ctx, src, width=0, height=0, crop='', ext=''):
+		to = str(ctx['page'].src.parent) + '/' + src
+		to = os.path.normpath(to)
+
+		try:
+			img = ctx['imgs'].get(to)
+			return img.scale(width, height, crop, ext)
+		except KeyError:
+			raise Exception('img %s does not exist' % to)
 
 def _parse_datetime(dir):
 	date = datetime.datetime.strptime(
@@ -302,7 +331,9 @@ def _parse_datetime(dir):
 	return date, dir
 
 def _determine_dest(conf, file, is_page=False):
-	parts = file.parts[1:]
+	parts = file.parts
+	if file.parts[0] == conf['CONTENT_DIR'].strip('/'):
+		parts = parts[1:]
 
 	if file.suffix == '.j2':
 		if len(parts) == 1:
@@ -358,30 +389,6 @@ def _load_page(conf, file):
 
 	fm = frontmatter.loads(content)
 	return Page(conf, file, fm)
-
-def _build_page(conf, page, pages, imgs):
-	try:
-		tmpl = jinja.from_string(page.content)
-
-		content = tmpl.render(
-			conf=conf,
-			page=page,
-			pages=pages,
-			imgs=imgs,)
-
-		if not conf['DEBUG']:
-			content = htmlmin.minify(content,
-				remove_comments=True,
-				reduce_boolean_attributes=True)
-
-		_makedirs(page.dst)
-		with page.dst.open('w') as f:
-			f.write(content)
-
-	except Exception as e:
-		# Wrap all exceptions: there are issues with pickling and custom
-		# exceptions from jinja
-		raise Exception(str(e))
 
 def _load_img(conf, file):
 	meta = file.with_name(file.name + '.meta')
