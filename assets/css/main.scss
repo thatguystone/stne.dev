@@ -1,3 +1,53 @@
+$header_size: 75px;
+$body_width: 80%;
+
 body {
-	background: #000;
+	background: white;
+}
+
+a {
+	text-decoration: none;
+}
+
+header {
+	a {
+		color: black;
+	}
+
+	nav {
+		background: #fff;
+		height: $header_size;
+		line-height: $header_size;
+		margin: 0 auto;
+		width: $body_width;
+	}
+
+	.logo {
+		font-family: 'Nova Mono';
+		font-size: 2em;
+		margin-left: 5%;
+	}
+
+	ul {
+		display: inline;
+		float: right;
+		margin: 0;
+
+		li {
+			display: inline-block;
+			margin-left: 30px;
+		}
+	}
+
+	.hero {
+		background: url("assets/img/swimming.jpg:1600x600c");
+		background-position: center;
+		background-size: cover;
+		height: 500px;
+	}
+}
+
+.content {
+	margin: 0 auto;
+	width: $body_width;
 }

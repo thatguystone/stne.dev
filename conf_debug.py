@@ -15,5 +15,6 @@ JS = [
 ]
 
 CSS = [
+	'css/reset.scss',
 	'css/main.scss',
 ]

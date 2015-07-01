@@ -1,16 +1,31 @@
 {% import "_macros.j2" as macro with context %}
 
 <head>
-{% block head %}
+	<title>Andrew Stone</title>
 	{% assets "css" %}
 		<link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" />
 	{% endassets %}
-{% endblock %}
+	<link href='http://fonts.googleapis.com/css?family=Nova+Mono' rel='stylesheet' type='text/css'>
+	{% block head %}{% endblock %}
 </head>
 
 <body>
-{% block body %}
-{% endblock %}
+	<header>
+		<nav>
+			<a href="/" class="logo">Andrew Stone</a>
+			<ul>
+				<li><a href="/tech">Technobabble</a></li>
+				<li><a href="/blog">Adventures</a></li>
+				<li><a href="/projects">Plagirism</a></li>
+			</ul>
+		</nav>
+
+		<div class="hero"></div>
+	</header>
+
+	<section class="content">
+		{% block body %}{% endblock %}
+	</section>
 </body>
 
 {% assets "js" %}
