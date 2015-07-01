@@ -19,10 +19,9 @@ class Builder(watchdog.events.FileSystemEventHandler):
 		self.build()
 
 	def build(self):
-		import stas
-		importlib.reload(stas)
-
 		try:
+			import stas
+			importlib.reload(stas)
 			stas.Stas(self.conf).build()
 		except:
 			traceback.print_exc()
@@ -64,9 +63,9 @@ def main(debug):
 	reloader = Reloader(conf_file, server)
 
 	observer = watchdog.observers.Observer()
-	observer.schedule(builder, conf.CONTENT_DIR)
-	observer.schedule(builder, conf.TEMPLATE_DIR)
-	observer.schedule(builder, conf.ASSETS_DIR)
+	observer.schedule(builder, conf.CONTENT_DIR, recursive=True)
+	observer.schedule(builder, conf.TEMPLATE_DIR, recursive=True)
+	observer.schedule(builder, conf.ASSETS_DIR, recursive=True)
 	observer.schedule(reloader, '.')
 	observer.start()
 

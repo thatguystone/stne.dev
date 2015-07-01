@@ -1,0 +1,8 @@
+{% macro img(src, width=0, height=0, crop=False, ext="", alt="") %}
+
+<img
+	src="{{ src|img(width=width, height=height, crop=crop, ext=ext) }}"
+	{% if alt %}alt="{{ alt }}"{% endif %}
+	/>
+
+{% endmacro %}
