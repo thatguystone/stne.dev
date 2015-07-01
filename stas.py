@@ -33,10 +33,7 @@ class Stas(object):
 		assets = webassets.Environment(
 			self.conf['PUBLIC_DIR'] + '/assets/', '/assets',
 			load_path=(self.conf['ASSETS_DIR'], ),
-			debug=bool(self.conf['DEBUG']),
-
-			manifest=False,
-			cache=False)
+			debug=bool(self.conf['DEBUG']))
 
 		assets.register('js', webassets.Bundle(
 			*self.conf['JS'],
@@ -165,6 +162,9 @@ class CSSFilter(webassets.filter.Filter):
 		sheet = _in.read()
 		for url in URLRE.findall(sheet):
 			path = url.replace('"', '').replace("'", '')
+			if not path.startswith("assets/"):
+				continue
+
 			scaled = self.scale(path)
 			sheet = sheet.replace(url, '"%s"' % scaled)
 

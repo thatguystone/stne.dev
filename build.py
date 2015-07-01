@@ -39,9 +39,9 @@ class Reloader(watchdog.events.FileSystemEventHandler):
 class RequestHandler(http.server.SimpleHTTPRequestHandler):
 	allow_reuse_address = True
 
-	def do_GET(self):
-		self.path = os.path.join(self.conf.PUBLIC_DIR, '.' + self.path)
-		super().do_GET()
+	def translate_path(self, path):
+		path = os.path.join(self.conf.PUBLIC_DIR, '.' + path)
+		return super().translate_path(path)
 
 def main(debug):
 	conf_mod = 'conf_debug'
