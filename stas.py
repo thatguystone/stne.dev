@@ -3,6 +3,7 @@ import hashlib
 import multiprocessing
 import os
 import pathlib
+import re
 import shutil
 import signal
 import subprocess
@@ -19,6 +20,8 @@ IMG_EXTS = [
 	'.png',
 ]
 
+URLRE = re.compile(r'url\((.*)\)')
+
 # Only set from pool processes
 jinja = None
 
@@ -30,8 +33,20 @@ class Stas(object):
 		assets = webassets.Environment(
 			self.conf['PUBLIC_DIR'] + '/assets/', '/assets',
 			load_path=(self.conf['ASSETS_DIR'], ),
-			debug=bool(self.conf['DEBUG']))
-		assets.register(self.conf['ASSETS'])
+			debug=bool(self.conf['DEBUG']),
+
+			manifest=False,
+			cache=False)
+
+		assets.register('js', webassets.Bundle(
+			*self.conf['JS'],
+			filters='closure_js',
+			output='all.js'))
+
+		assets.register('css', webassets.Bundle(
+			*self.conf['CSS'],
+			filters=['pyscss', CSSFilter(self.conf), 'cssmin'],
+			output='all.css'))
 
 		jinja = jinja2.Environment(
 			loader=jinja2.FileSystemLoader(self.conf['TEMPLATE_DIR']),
@@ -135,6 +150,54 @@ class Stas(object):
 					_copy_blob,
 					(self.conf, blob, )))
 
+class CSSFilter(webassets.filter.Filter):
+	name = 'stas_css'
+	max_debug_level = None
+
+	def __init__(self, conf):
+		super().__init__()
+		self.conf = conf
+
+	def input(self, _in, out, **kwargs):
+		out.write(_in.read())
+
+	def output(self, _in, out, **kwargs):
+		sheet = _in.read()
+		for url in URLRE.findall(sheet):
+			path = url.replace('"', '').replace("'", '')
+			scaled = self.scale(path)
+			sheet = sheet.replace(url, '"%s"' % scaled)
+
+		out.write(sheet)
+
+	def scale(self, url):
+		parts = url.split(':')
+		img = Image(None, pathlib.Path(parts[0]), None)
+		abs_url = '/' + parts[0]
+		img.dst = pathlib.Path(self.conf['PUBLIC_DIR'] + '/' + abs_url)
+
+		if len(parts) == 1:
+			img.scale(0, 0, False, None)
+			return abs_url
+
+		size = parts[1]
+		parts = size.split('@')
+
+		mul = 1
+		if len(parts) > 1:
+			mul = int(parts[1][0])
+
+		size = parts[0]
+		crop = size.endswith('c')
+		if crop:
+			size = size[:-1]
+
+		sizes = size.split('x')
+		width = int(sizes[0]) * mul
+		height = int(sizes[1]) * mul
+
+		return '/' + '/'.join(img.scale(width, height, crop, None).parts[1:])
+
 class Pages(object):
 	def __init__(self):
 		self.cats = {}
@@ -178,7 +241,8 @@ class Image(object):
 		else:
 			self.metadata = {}
 
-		self.name, self.category, self.dst = _determine_dest(conf, file)
+		if conf:
+			self.name, self.category, self.dst = _determine_dest(conf, file)
 
 	def _changed(self, dst):
 		try:
@@ -191,7 +255,13 @@ class Image(object):
 		return True
 
 	def scale(self, width, height, crop, ext):
-		if not width and not height and not crop:
+		if not ext:
+			ext = self.dst.suffix
+
+		if ext[0] != '.':
+			ext = '.' + ext
+
+		if not width and not height and not crop and ext == self.dst.suffix:
 			if self._changed(self.dst):
 				_makedirs(self.dst)
 				shutil.copyfile(str(self.src), str(self.dst))
@@ -203,12 +273,6 @@ class Image(object):
 		if crop:
 			suffix += 'c'
 			scale_dims += '^'
-
-		if not ext:
-			ext = self.dst.suffix
-
-		if ext[0] != '.':
-			ext = '.' + ext
 
 		dst = self.dst.with_name('%s.%s%s' % (self.dst.stem, suffix, ext))
 		if self._changed(dst):

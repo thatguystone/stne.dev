@@ -1,5 +1,3 @@
-import webassets
-
 TITLE = 'Andrew Stone'
 SITEURL = ''
 
@@ -12,13 +10,10 @@ TEMPLATE_DIR = 'templates/'
 
 PUBLIC_DIR = 'public/'
 
-ASSETS = {
-	'js': webassets.Bundle(
-		'js/main.js',
-		filters='closure_js',
-		output='all.js'),
-	'css': webassets.Bundle(
-		'css/main.scss',
-		filters='pyscss,cssmin',
-		output='all.css'),
-}
+JS = [
+	'js/main.js',
+]
+
+CSS = [
+	'css/main.scss',
+]
