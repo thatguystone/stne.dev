@@ -18,12 +18,14 @@ class Builder(watchdog.events.FileSystemEventHandler):
 		print("Change detected, rebuilding...")
 		self.build()
 
-	def build(self):
+	def build(self, debug=True):
 		try:
 			import stas
 			importlib.reload(stas)
 			stas.Stas(self.conf).build()
 		except:
+			if not debug:
+				raise
 			traceback.print_exc()
 
 class Reloader(watchdog.events.FileSystemEventHandler):
@@ -53,7 +55,7 @@ def main(debug):
 	importlib.reload(conf)
 
 	builder = Builder(conf)
-	builder.build()
+	builder.build(debug=debug)
 
 	if not debug:
 		return

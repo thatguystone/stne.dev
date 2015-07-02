@@ -13,7 +13,6 @@ import subprocess
 import urllib.parse
 
 import frontmatter
-import htmlmin
 import jinja2
 import markdown
 import webassets
@@ -244,17 +243,20 @@ class Page(object):
 	def build(self):
 		try:
 			tmpl = jinja.from_string(self.content)
-
 			content = tmpl.render(page=self)
-
-			if not self.conf['DEBUG']:
-				content = htmlmin.minify(content,
-					remove_comments=True,
-					reduce_boolean_attributes=True)
 
 			_makedirs(self.dst)
 			with self.dst.open('w') as f:
 				f.write(content)
+
+			if not self.conf['DEBUG']:
+				# From: https://github.com/tdewolff/minify/tree/master/cmd/minify
+				status = subprocess.call([
+					'minify',
+					'-o', str(self.dst),
+					str(self.dst)])
+				if status:
+					raise Exception('failed to minify %s' % self.src)
 
 			_mark_used(self.dst)
 
@@ -355,8 +357,8 @@ class Jinja(object):
 		jinja = jinja2.Environment(
 			loader=jinja2.FileSystemLoader(conf['TEMPLATE_DIR']),
 			extensions=[
-			'webassets.ext.jinja2.AssetsExtension',
-			'jinja2_highlight.HighlightExtension'])
+				'webassets.ext.jinja2.AssetsExtension',
+			])
 		jinja.filters['markdown'] = Jinja._filter_markdown
 		jinja.filters['img'] = Jinja._filter_img
 		jinja.assets_environment = assets

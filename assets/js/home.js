@@ -7,13 +7,9 @@ $(function() {
 			return;
 		}
 
-		WordCloud(
-			$el[0],
-			{
-				gridSize: 3,
-				list: wordCloudData.data,
-				rotateRatio: .8,
-				weightFactor: .4,
-			});
+		WordCloud($el[0], {
+			gridSize: 5,
+			list: wordCloudData.data
+		});
 	}
 });
