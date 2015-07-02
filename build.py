@@ -64,6 +64,7 @@ def main(debug):
 
 	observer = watchdog.observers.Observer()
 	observer.schedule(builder, conf.CONTENT_DIR, recursive=True)
+	observer.schedule(builder, conf.DATA_DIR, recursive=True)
 	observer.schedule(builder, conf.TEMPLATE_DIR, recursive=True)
 	observer.schedule(builder, conf.ASSETS_DIR, recursive=True)
 	observer.schedule(reloader, '.')

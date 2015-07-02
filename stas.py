@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import json
 import multiprocessing
 import os
 import pathlib
@@ -37,7 +38,7 @@ class Stas(object):
 
 		assets.register('js', webassets.Bundle(
 			*self.conf['JS'],
-			filters='closure_js',
+			filters=['closure_js'],
 			output='all.js'))
 
 		assets.register('css', webassets.Bundle(
@@ -52,17 +53,28 @@ class Stas(object):
 			pool = multiprocessing.Pool(cpus * 2,
 				self._worker_init, (jinja, ))
 
-			pages, imgs, blobs = self._load_pages(pool)
+			pages, imgs, data, blobs = self._load(pool, assets)
 
-			jobs = []
-			self._build_pages(pages, imgs, jobs, pool)
-			self._copy_blobs(blobs, jobs, pool)
+			jinja.globals.update({
+				'conf': self.conf,
+				'data': data,
+				'imgs': imgs,
+				'pages': pages,
+			})
 
-			for job in jobs:
-				job.get()
+			pool.close()
+			pool.join()
+			pool = multiprocessing.Pool(cpus * 2,
+				self._worker_init, (jinja, ))
+
+			self._build_pages(pages, pool)
+			self._copy_blobs(blobs, pool)
+
+			pool.close()
+			pool.join()
+
 		finally:
 			pool.terminate()
-			pool.join()
 
 	def _conf_dict(self, conf):
 		d = {}
@@ -80,13 +92,26 @@ class Stas(object):
 		global jinja
 		jinja = j
 
-	def _load_pages(self, pool):
+	def _load(self, pool, assets):
+		pages = Pages()
+		imgs = Images()
+		data = {}
+		blobs = []
+
+		data_jobs = []
 		page_jobs = []
 		img_jobs = []
 
-		pages = Pages()
-		imgs = Images()
-		blobs = []
+		# Build the assets before running templates, or each subprocess
+		# tries to build them independently
+		for bundle in assets:
+			pool.apply_async(bundle.urls())
+
+		path = pathlib.Path(self.conf['DATA_DIR'])
+		for f in path.glob('*'):
+			data_jobs.append(pool.apply_async(
+				_load_data,
+				(self.conf, f, )))
 
 		path = pathlib.Path(self.conf['CONTENT_DIR'])
 		for f in path.glob('**/*'):
@@ -101,25 +126,27 @@ class Stas(object):
 			elif f.is_file():
 				blobs.append(f)
 
+		for job in data_jobs:
+			d = job.get()
+			data[d[0]] = d[1]
+
 		for job in page_jobs:
 			pages.add(job.get())
 
 		for job in img_jobs:
 			imgs.add(job.get())
 
-		return pages, imgs, blobs
+		return pages, imgs, data, blobs
 
-	def _build_pages(self, pages, imgs, jobs, pool):
+	def _build_pages(self, pages, pool):
 		for page in pages.iter():
-			jobs.append(pool.apply_async(
-				page.build,
-				(pages, imgs, )))
+			pool.apply_async(page.build)
 
-	def _copy_blobs(self, blobs, jobs, pool):
+	def _copy_blobs(self, blobs, pool):
 		for blob in blobs:
-			jobs.append(pool.apply_async(
-					_copy_blob,
-					(self.conf, blob, )))
+			pool.apply_async(
+				_copy_blob,
+				(self.conf, blob, ))
 
 class CSSFilter(webassets.filter.Filter):
 	name = 'stas_css'
@@ -193,15 +220,11 @@ class Page(object):
 			conf, file,
 			is_page=True)
 
-	def build(self, pages, imgs):
+	def build(self):
 		try:
 			tmpl = jinja.from_string(self.content)
 
-			content = tmpl.render(
-				conf=self.conf,
-				page=self,
-				pages=pages,
-				imgs=imgs,)
+			content = tmpl.render(page=self)
 
 			if not self.conf['DEBUG']:
 				content = htmlmin.minify(content,
@@ -382,6 +405,38 @@ def _determine_dest(conf, file, is_page=False):
 		dst += '/%s%s' % (name, file.suffix)
 
 	return name, category, pathlib.Path(dst)
+
+def _load_data(conf, file):
+	cache = conf['DATA_CACHE_DIR'] + '/' + str(file)
+	if os.access(str(cache), os.R_OK):
+		with cache.open() as f:
+			data = json.load(f)
+		if datetime.fromtimestamp(data[0]) > datetime.now():
+			return file.name, data[1]
+
+	if os.access(str(file), os.X_OK):
+		p = subprocess.Popen([str(file)], stdout=subprocess.PIPE)
+		stdout = p.communicate()[0]
+		if p.returncode != 0:
+			raise Exception('failed to execute %s: status=%d' % (
+				file.name,
+				p.returncode))
+
+		res = None
+		if stdout:
+			stdout = stdout.decode('utf-8').strip()
+			res = json.loads(stdout)
+
+		if isinstance(res, dict):
+			exp = res.get('stas_expires', 0)
+			if exp > 0:
+				with cache.open('w') as f:
+					json.dump([exp, res], f)
+
+		return file.name, res
+
+	with file.open() as f:
+		return file.name, json.load(f)
 
 def _load_page(conf, file):
 	with file.open() as f:
