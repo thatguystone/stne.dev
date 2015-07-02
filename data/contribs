@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! ve/bin/python
 
 import datetime
 import json
@@ -35,6 +35,7 @@ repos = {
 	'QuickIoClient': '../../IHR/quick.io/client-java',
 	'QuickiOS': '../../IHR/quick.io/client-ios',
 	'quickjs': '../../IHR/quick.io/client-js',
+	'swan': go + '/swan',
 	'verbinator': '../verbinator',
 }
 
@@ -70,7 +71,7 @@ scale = (1 / maxest) * 1000
 for name, sum in sums.items():
 	# sum = max(1, int((sum - minest) * scale))
 	# sum = min(100, sum)
-	sums[name] = int(math.log(sum, 3)) * 8
+	sums[name] = int(math.log(sum, 3)) * 3
 
 expires = datetime.datetime.now() + datetime.timedelta(hours=1)
 sums['stas_expires'] = int(expires.timestamp())
