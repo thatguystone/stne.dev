@@ -7,6 +7,11 @@ categories: cool algorithms
 summary: For those awkward times when you need to make the same decision, consistently.
 ---
 
+{% extends "base.j2" %}
+
+{% block content %}
+{% filter markdown %}
+
 ## Okay, what are you talking about?
 
 What, you've never wanted to be randomly consistent? Meaning, you've never wanted to use something that might-as-well be random, but at the same time give you consistent answers based on input? Well, if you have, you know it's a difficult problem, and if you haven't, count yourself lucky, but check out the cool little way I devised.
@@ -21,7 +26,7 @@ At first, this seems like an untenable position, but consider it a bit deeper: w
 
 Cryptographic hashing algorithms were specifically designed so that their return values represent a uniform distribution of possible values over its output range. For this algorithm, we'll use one of the best-known hashing algorithms out there: MD5 (128 bits). Honestly, the algorithm itself it far shorter than even this sentence. Let's see it:
 
-{% highlight "python" %}
+{% call macros.highlight("python") %}
 import hashlib
 
 class ConsistentDecision(object):
@@ -36,7 +41,7 @@ class ConsistentDecision(object):
     def ask(self, value):
         return (int(hashlib.md5(str(value))
             .hexdigest(), 16) % 100) < self.perc
-{% endhighlight %}
+{% endcall %}
 
 Note: So this is a python class, just for convenience, but it clearly doesn't have to be.
 
@@ -47,3 +52,6 @@ Quite simply, we take the input value and mod it by 100: this gives us a number 
 ## Why are you telling me this?
 
 Mainly, I just found this to be a pretty cool little algorithm. That and the original implementation included huge arrays, a 159 line class, and hilarity when I pointed out this simpler version. Moral of this story: know your algorithms, kids.
+
+{% endfilter %}
+{% endblock %}

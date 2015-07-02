@@ -1,5 +1,25 @@
 {% extends "base.j2" %}
 
-{% block body %}
-	<h1>Recent Posts</h1>
+{% block hero %}
+	<div class="home-hero"></div>
+{% endblock %}
+
+{% block content %}
+	<script>
+		var wordCloudData = {
+			id: "contrib-cloud",
+			data: [
+				{% for p, c in data.contribs.items() %}
+					['{{ p }}', {{ c }}],
+				{% endfor %}
+			],
+		};
+	</script>
+
+	<div id="recent">
+		Recent posts
+	</div>
+
+	<div id="contrib-cloud"></div>
+
 {% endblock %}

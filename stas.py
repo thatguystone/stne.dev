@@ -47,14 +47,10 @@ class Stas(object):
 			output='all.css'))
 
 		jinja = Jinja.init(self.conf, assets)
+		cpus = multiprocessing.cpu_count() * 2
 
-		try:
-			cpus = multiprocessing.cpu_count()
-			pool = multiprocessing.Pool(cpus * 2,
-				self._worker_init, (jinja, ))
-
+		with multiprocessing.Pool(cpus, self._worker_init, (jinja, )) as pool:
 			pages, imgs, data, blobs = self._load(pool, assets)
-
 			jinja.globals.update({
 				'conf': self.conf,
 				'data': data,
@@ -62,19 +58,14 @@ class Stas(object):
 				'pages': pages,
 			})
 
-			pool.close()
-			pool.join()
-			pool = multiprocessing.Pool(cpus * 2,
-				self._worker_init, (jinja, ))
+		with multiprocessing.Pool(cpus, self._worker_init, (jinja, )) as pool:
+			jobs = []
 
-			self._build_pages(pages, pool)
-			self._copy_blobs(blobs, pool)
+			self._build_pages(pages, pool, jobs)
+			self._copy_blobs(blobs, pool, jobs)
 
-			pool.close()
-			pool.join()
-
-		finally:
-			pool.terminate()
+			for job in jobs:
+				job.get()
 
 	def _conf_dict(self, conf):
 		d = {}
@@ -109,9 +100,10 @@ class Stas(object):
 
 		path = pathlib.Path(self.conf['DATA_DIR'])
 		for f in path.glob('*'):
-			data_jobs.append(pool.apply_async(
-				_load_data,
-				(self.conf, f, )))
+			if str(f) != self.conf['DATA_CACHE_DIR']:
+				data_jobs.append(pool.apply_async(
+					_load_data,
+					(self.conf, f, )))
 
 		path = pathlib.Path(self.conf['CONTENT_DIR'])
 		for f in path.glob('**/*'):
@@ -138,15 +130,15 @@ class Stas(object):
 
 		return pages, imgs, data, blobs
 
-	def _build_pages(self, pages, pool):
+	def _build_pages(self, pages, pool, jobs):
 		for page in pages.iter():
-			pool.apply_async(page.build)
+			jobs.append(pool.apply_async(page.build))
 
-	def _copy_blobs(self, blobs, pool):
+	def _copy_blobs(self, blobs, pool, jobs):
 		for blob in blobs:
-			pool.apply_async(
+			jobs.append(pool.apply_async(
 				_copy_blob,
-				(self.conf, blob, ))
+				(self.conf, blob, )))
 
 class CSSFilter(webassets.filter.Filter):
 	name = 'stas_css'
@@ -407,11 +399,12 @@ def _determine_dest(conf, file, is_page=False):
 	return name, category, pathlib.Path(dst)
 
 def _load_data(conf, file):
-	cache = conf['DATA_CACHE_DIR'] + '/' + str(file)
-	if os.access(str(cache), os.R_OK):
+	cache = pathlib.Path(conf['DATA_CACHE_DIR'] + '/' + str(file))
+
+	if cache.exists() and not _src_changed(file, cache):
 		with cache.open() as f:
 			data = json.load(f)
-		if datetime.fromtimestamp(data[0]) > datetime.now():
+		if datetime.datetime.fromtimestamp(data[0]) > datetime.datetime.now():
 			return file.name, data[1]
 
 	if os.access(str(file), os.X_OK):
@@ -429,9 +422,12 @@ def _load_data(conf, file):
 
 		if isinstance(res, dict):
 			exp = res.get('stas_expires', 0)
+			del res['stas_expires']
 			if exp > 0:
+				_makedirs(cache)
 				with cache.open('w') as f:
 					json.dump([exp, res], f)
+				os.utime(str(cache), (0, file.stat().st_mtime))
 
 		return file.name, res
 
@@ -458,6 +454,17 @@ def _copy_blob(conf, file):
 	_, _, dst = _determine_dest(conf, file)
 	_makedirs(dst)
 	shutil.copyfile(str(file), str(dst))
+
+def _src_changed(src, dst):
+	try:
+		srcs = src.stat()
+		dsts = dst.stat()
+		if srcs.st_mtime == dsts.st_mtime:
+			return False
+	except FileNotFoundError:
+		pass
+
+	return True
 
 def _makedirs(dst):
 	os.makedirs(str(dst.parent), exist_ok=True)

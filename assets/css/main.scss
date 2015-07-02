@@ -1,5 +1,6 @@
 $header_size: 75px;
 $body_width: 80%;
+$head_foot_width: $body_width - 10%;
 
 body {
 	background: white;
@@ -19,13 +20,12 @@ header {
 		height: $header_size;
 		line-height: $header_size;
 		margin: 0 auto;
-		width: $body_width;
+		width: $head_foot_width;
 	}
 
 	.logo {
 		font-family: 'Nova Mono';
 		font-size: 2em;
-		margin-left: 5%;
 	}
 
 	ul {
@@ -38,16 +38,24 @@ header {
 			margin-left: 30px;
 		}
 	}
-
-	.hero {
-		background: url("assets/img/swimming.jpg:1600x600c");
-		background-position: center;
-		background-size: cover;
-		height: 500px;
-	}
 }
 
 .content {
-	margin: 0 auto;
+	margin: 30px auto;
 	width: $body_width;
+}
+
+footer {
+	font-size: .7em;
+	margin: 30px auto;
+	text-align: center;
+	width: $head_foot_width;
+
+	ul {
+		display: inline;
+
+		li {
+			display: inline-block;
+		}
+	}
 }

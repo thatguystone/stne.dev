@@ -7,6 +7,11 @@ categories: linux
 summary: How to capture all RTMP streams on Linux.
 ---
 
+{% extends "base.j2" %}
+
+{% block content %}
+{% filter markdown %}
+
 ## Getting
 
 You're going to need the following:
@@ -20,25 +25,25 @@ You're going to need the following:
 First, in order to capture RTMP streams, you're going to need to redirect the traffic to something you can intercept (ie.
 back to your machine). Since you're using Linux, this is incredibly simple:
 
-{% highlight "bash" %}
+{% call macros.highlight("bash") %}
 $# iptables -t nat -A OUTPUT -p tcp --dport 1935 \
 	 -m owner \! --uid-owner root -j REDIRECT
-{% endhighlight %}
+{% endcall %}
 
 To delete the iptables rule:
 
-{% highlight "bash" %}
+{% call macros.highlight("bash") %}
 $# iptables -t nat -D OUTPUT -p tcp --dport 1935 \
 	-m owner \! --uid-owner root -j REDIRECT
-{% endhighlight %}
+{% endcall %}
 
 ## Hijacking the requests
 
 The following command will create the RTMP interceptor and respawn it once it downloads a stream completely.
 
-{% highlight "bash" %}
-sudo rtmpsuck
-{% endhighlight %}
+{% call macros.highlight("bash") %}
+$# rtmpsuck
+{% endcall %}
 
 To kill it, issue Ctrl+c, and you're good.
 
@@ -52,3 +57,6 @@ provided that it wasn't root who made the request.
 
 Don't be evil. Respect the laws of your respective country. I am not responsible for how you use this. I only talk
 about this topic because I find it interesting, and there's nothing wrong with learning.
+
+{% endfilter %}
+{% endblock %}
