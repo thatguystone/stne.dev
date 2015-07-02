@@ -5,9 +5,9 @@ DEBUG = True
 DEBUG_PORT = 8000
 
 ASSETS_DIR = 'assets/'
+CACHE_DIR = '.cache/'
 CONTENT_DIR = 'content/'
 DATA_DIR = 'data/'
-DATA_CACHE_DIR = '.data-cache'
 TEMPLATE_DIR = 'templates/'
 
 PUBLIC_DIR = 'public/'
