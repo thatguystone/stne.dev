@@ -1,6 +1,11 @@
-import xml.etree.ElementTree as ET
-import os
 import datetime
+import multiprocessing
+import os
+import re
+import urllib.request
+import xml.etree.ElementTree as ET
+
+from pyquery import PyQuery as pq
 
 tree = ET.parse('wp_export.xml')
 root = tree.getroot()
@@ -27,6 +32,17 @@ title: "{title}"
 {{% endblock %}}
 '''
 
+dims = re.compile('-\d{3}x\d{3}')
+
+def fetch(url, dst):
+	res = urllib.request.urlopen(url)
+	with open(dst, 'wb') as f:
+		f.write(res.read())
+
+cpus = multiprocessing.cpu_count() * 4
+pool = multiprocessing.Pool(cpus)
+jobs = []
+
 for item in root.findall('channel')[0].findall('item'):
 	title = item.find('title', ns).text
 	content = item.find('content:encoded', ns).text
@@ -42,7 +58,28 @@ for item in root.findall('channel')[0].findall('item'):
 	else:
 		page = '%s.j2' % path
 
+	pqc = pq(content)
+	imgas = pqc.find('a').filter(lambda i: pq(this).find('img'))
+	for imga in imgas:
+		img = pq(imga).find('img')
+		img_title = img.attr('title')
+		src = img.attr('src')
+		src = re.sub(dims, '', src)
+		base = os.path.basename(src)
+
+		repl = '{{ macros.img("%s", alt="%s", inline=False) }}' % (base, img_title.replace('"', '\\"'))
+		pq(imga).replaceWith(repl)
+
+		dst = path + '/' + base
+		# jobs.append(pool.apply_async(fetch, (src, dst)))
+
+	content = pqc.html()
+	content = content.replace('  ', ' ')
+
 	with open(page, 'w') as f:
 		f.write(post_format.format(
 			title=title,
 			content=content))
+
+for job in jobs:
+	job.get()

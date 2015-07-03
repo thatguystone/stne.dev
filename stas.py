@@ -362,7 +362,7 @@ class Page(object):
 		except Exception as e:
 			# Wrap all exceptions: there are issues with pickling and custom
 			# exceptions from jinja
-			raise Exception(str(e))
+			raise Exception('in %s: %s' % (self.src, str(e)))
 
 class Images(object):
 	def __init__(self):
