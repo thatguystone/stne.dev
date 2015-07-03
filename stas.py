@@ -240,16 +240,16 @@ class Stas(object):
 				jobs.append(pool.apply_async(page.build))
 			else:
 				subs = len(pages.cats[page.category])
-				pages = math.ceil(subs / self.conf['PER_PAGE'])
+				page_count = math.ceil(subs / self.conf['PER_PAGE'])
 
-				for page_num in range(pages):
+				for page_num in range(page_count):
 					list_start = page_num * self.conf['PER_PAGE']
 					list_end = list_start + self.conf['PER_PAGE']
 					jobs.append(pool.apply_async(page.build, kwds={
 						'page_num': page_num,
 						'list_start': list_start,
 						'list_end': list_end,
-						'list_has_next': page_num < (pages - 1),
+						'list_has_next': page_num < (page_count - 1),
 					}))
 
 	def _copy_blobs(self, blobs, pool, jobs):
