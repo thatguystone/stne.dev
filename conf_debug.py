@@ -12,13 +12,24 @@ TEMPLATE_DIR = 'templates/'
 
 PUBLIC_DIR = 'public/'
 
+PER_PAGE = 5
+
+NAV = [
+	('Technobabble', 'tech'),
+	('Adventures', 'blog'),
+	('Plagirism', 'projects'),
+]
+
 JS = [
+	'js/highlight.js',
 	'js/wordcloud2.js',
+	'js/main.js',
 	'js/home.js',
 ]
 
 CSS = [
-	'css/reset.scss',
+	'css/bootstrap-3.3.5.css',
+	'css/github-gist.css',
 	'css/main.scss',
 	'css/home.scss',
 ]

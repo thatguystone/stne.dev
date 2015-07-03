@@ -1,9 +1,9 @@
 debug: ve
 	./build.py --debug
 
-publish: ve clean
+publish: ve
 	./build.py
-	# rsync public/ stoney.io:/var/www/stoney.io/
+	rsync -av --delete public/ stoney.io:/var/www/stoney.io/
 
 clean:
 	rm -rf public/

@@ -1,15 +1,15 @@
 ---
-layout: post
-title: svnstash
-
-categories: projects
-
-summary: A stash "extension" for subversion. Missing git?
+title: "svnstash: git-like stashing in svn"
 ---
 
-## The back-story
+{% extends "base.j2" %}
+
+{% block content %}
+{% filter markdown %}
 
 One week at work, I was trying to figure out how to stash my working copy in SVN only to discover that I could not. Everywhere I looked, I saw nothing but huge "svn stash" projects with incredibly complex syntaxes and impossible to remember commands. I missed git.
+
+<!-- >8 more -->
 
 ## Why was it so hard?
 
@@ -22,3 +22,6 @@ Yeah, so did I.  Here you go: [svnstash on GitHub](https://github.com/thatguysto
 ## How do I use this?
 
 Quite well...erm, I mean, [read the documentation](https://github.com/thatguystone/svnstash#svnstash).
+
+{% endfilter %}
+{% endblock %}

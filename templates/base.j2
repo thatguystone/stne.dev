@@ -1,33 +1,42 @@
+<!DOCTYPE html>
 {% import "_macros.j2" as macros with context %}
-
 <head>
 	<title>Andrew Stone</title>
 	{% assets "css" %}
-		<link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" />
+		<link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
 	{% endassets %}
-	<link href='http://fonts.googleapis.com/css?family=Nova+Mono' rel='stylesheet' type='text/css'>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	{% block head %}{% endblock %}
 </head>
 
 <body>
 	<header>
-		<nav>
-			<a href="/" class="logo">Andrew Stone</a>
-			<ul>
-				<li><a href="/tech">Technobabble</a></li>
-				<li><a href="/blog">Adventures</a></li>
-				<li><a href="/projects">Plagirism</a></li>
-			</ul>
+		<nav class="container-fluid">
+			<div class="col-md-2 col-md-offset-3">
+				<a href="/" class="logo">Andrew Stone</a>
+			</div>
+			<div class="col-md-4">
+				<ul class="nav nav-pills">
+					{% for item in conf.NAV %}
+						<li{% if page.category == item[1] %} class="active"{% endif %}>
+							<a href="/{{ item[1] }}">
+								{{ item[0] }}
+							</a>
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
 		</nav>
 
 		{% block hero %}{% endblock %}
 	</header>
 
-	<section class="content">
+	<div class="container">
 		<!-- >8 stas-content -->
 			{% block content %}{% endblock %}
-		<!-- end-content 8< -->
-	</section>
+		<!-- stas-content 8< -->
+	</div>
 
 	<footer>
 		<ul>

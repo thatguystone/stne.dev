@@ -1,17 +1,17 @@
 ---
-layout: post
 title: Verbinator
-
-categories: projects
-
-summary: Basic information about the Verbinator project.
 ---
 
-## So, what is it?
+{% extends "base.j2" %}
+
+{% block content %}
+{% filter markdown %}
 
 Verbinator is a tool to help you understand German. First, you might ask yourself why you would only ever
 want only the verbs of a sentence translated, but how often has it happened that you read an entire sentence, understand
 every word, then get to a verb and wonder what it's doing? Yeah, that's what I thought. This is for that case.
+
+<!-- >8 more -->
 
 ## Why not Google Translator / Babel Fish?
 
@@ -50,3 +50,6 @@ Well, then you might want to report an issue on [GitHub Issues](https://github.c
 ## Where else can I use this?
 
 Check out the [bookmarklet](../verbinator-bookmarklet/).
+
+{% endfilter %}
+{% endblock %}

@@ -35,6 +35,7 @@ repos = {
 	'QuickIoClient': '../../IHR/quick.io/client-java',
 	'QuickiOS': '../../IHR/quick.io/client-ios',
 	'quickjs': '../../IHR/quick.io/client-js',
+	'svnstash': '../svnstash',
 	'swan': go + '/swan',
 	'verbinator': '../verbinator',
 }

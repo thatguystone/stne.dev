@@ -2,6 +2,7 @@ import datetime
 import functools
 import hashlib
 import json
+import math
 import multiprocessing
 import multiprocessing.managers
 import os
@@ -23,8 +24,12 @@ IMG_EXTS = [
 	'.png',
 ]
 
-URLRE = re.compile(r'url\((.*)\)')
+URLRE = re.compile(r'url\((.*?)\)')
 SCALEDRE = re.compile(r'.*(\.s(\d*x\d*c?)).*')
+
+SCISSORS = '<!-- >8 stas-content -->'
+SCISSORS_END = '<!-- stas-content 8< -->'
+MORE = '<!-- >8 more -->'
 
 # Only set from pool processes
 jinja = None
@@ -38,21 +43,27 @@ class Stas(object):
 		assets_cache = self.conf['CACHE_DIR'] + '/webassets'
 		_makedirs(assets_cache)
 
+		debug = bool(self.conf['DEBUG'])
+		combined = 'all'
+		if debug:
+			combined = 'debug'
+
 		assets = webassets.Environment(
 			self.conf['PUBLIC_DIR'] + '/assets/', '/assets',
 			load_path=(self.conf['ASSETS_DIR'], ),
-			debug=bool(self.conf['DEBUG']),
-			cache=assets_cache)
+			debug=debug,
+			cache=assets_cache,
+			pyscss_debug_info=False)
 
 		assets.register('js', webassets.Bundle(
 			*self.conf['JS'],
 			filters=['closure_js'],
-			output='all.js'))
+			output=combined + '.js'))
 
 		assets.register('css', webassets.Bundle(
 			*self.conf['CSS'],
 			filters=['pyscss', 'cssmin'],
-			output='all.css'))
+			output=combined + '.css'))
 
 		jinja = Jinja.init(self.conf, assets)
 		cpus = multiprocessing.cpu_count() * 2
@@ -65,7 +76,7 @@ class Stas(object):
 		for bundle in assets:
 			asset_urls += bundle.urls()
 
-		with multiprocessing.Pool(cpus, self._worker_init, (jinja, )) as pool:
+		with multiprocessing.Pool(cpus, self._winit, (jinja, )) as pool:
 			publics, pages, imgs, data, blobs = self._load(pool, assets)
 			jinja.globals.update({
 				'conf': self.conf,
@@ -75,16 +86,31 @@ class Stas(object):
 			})
 
 		uc = manager.set(publics)
+		pages.sort()
 
-		with multiprocessing.Pool(cpus, self._worker_init, (jinja, uc)) as pool:
+		with multiprocessing.Pool(cpus, self._winit, (jinja, uc)) as pool:
 			jobs = []
+			page_jobs = []
+			list_pages = []
 
-			self._build_pages(pages, pool, jobs)
+			for page in pages.iter():
+				if page.metadata.get('list_page', False):
+					list_pages.append(page)
+				else:
+					page_jobs.append((page, pool.apply_async(page.build)))
+
 			self._copy_blobs(blobs, pool, jobs)
 			self._finalize_assets(asset_urls, pool, jobs, uc)
 
-			for job in jobs:
-				job.get()
+			for pg in page_jobs:
+				pg[0].content = pg[1].get()
+
+			# Yet another spawn to get updated page content to these guys
+			with multiprocessing.Pool(cpus, self._winit, (jinja, uc)) as ip:
+				self._build_list_pages(list_pages, pages, ip, jobs)
+
+				for job in jobs:
+					job.get()
 
 		# Sorted in reverse, this should make sure that any empty directories
 		# are removed recursively
@@ -105,7 +131,7 @@ class Stas(object):
 			d[k] = getattr(conf, k)
 		return d
 
-	def _worker_init(self, j, uc=None):
+	def _winit(self, j, uc=None):
 		signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 		# There are tons of issues passing jinja through pickle, so just have
@@ -172,7 +198,7 @@ class Stas(object):
 				with open(path) as f:
 					css = f.read()
 
-				for rel, css_path in _css_find_urls(css):
+				for rel, css_path in self._css_find_urls(css):
 					match = SCALEDRE.match(rel)
 					if match:
 						rel = rel.replace(match.group(1), '')
@@ -185,6 +211,12 @@ class Stas(object):
 
 				with open(path, 'w') as f:
 					f.write(css)
+
+	def _css_find_urls(self, sheet):
+		for url in URLRE.findall(sheet):
+			path = url.replace('"', '').replace("'", '')
+			if path.startswith("/assets/"):
+				yield path[1:], url
 
 	def _scale_css_img(self, url, scale):
 		img = Image(self.conf, pathlib.Path(url), None)
@@ -202,9 +234,23 @@ class Stas(object):
 
 		return img.scale(width, height, crop, None, as_job=True)
 
-	def _build_pages(self, pages, pool, jobs):
-		for page in pages.iter():
-			jobs.append(pool.apply_async(page.build))
+	def _build_list_pages(self, list_pages, pages, pool, jobs):
+		for page in list_pages:
+			if not page.category:
+				jobs.append(pool.apply_async(page.build))
+			else:
+				subs = len(pages.cats[page.category])
+				pages = math.ceil(subs / self.conf['PER_PAGE'])
+
+				for page_num in range(pages):
+					list_start = page_num * self.conf['PER_PAGE']
+					list_end = list_start + self.conf['PER_PAGE']
+					jobs.append(pool.apply_async(page.build, kwds={
+						'page_num': page_num,
+						'list_start': list_start,
+						'list_end': list_end,
+						'list_has_next': page_num < (pages - 1),
+					}))
 
 	def _copy_blobs(self, blobs, pool, jobs):
 		for blob in blobs:
@@ -224,6 +270,25 @@ class Pages(object):
 		cat = self.cats.setdefault(page.category, [])
 		cat.append(page)
 
+	def sort(self):
+		for posts in self.cats.values():
+			posts.sort(key=lambda p: str(p.src), reverse=True)
+
+	def _filter_posts(self, cat):
+		return [p for p in self.cats[cat] if p.date]
+
+	def posts(self, cat=None):
+		if cat:
+			return self._filter_posts(cat)
+
+		posts = []
+		for cat in self.cats:
+			posts += self._filter_posts(cat)
+
+		posts.sort(key=lambda p: str(p.src), reverse=True)
+
+		return posts
+
 	def iter(self):
 		for cat in self.cats.values():
 			for page in cat:
@@ -233,32 +298,66 @@ class Page(object):
 	def __init__(self, conf, file, fm):
 		self.src = file
 		self.conf = conf
-		self.content = fm.content
+		self.tmpl_content = fm.content
 		self.metadata = fm.metadata
 
-		self.name, self.category, self.dst = _determine_dest(
+		self.name, self.category, self.dst, self.date = _determine_dest(
 			conf, file,
 			is_page=True)
 
-	def build(self):
-		try:
-			tmpl = jinja.from_string(self.content)
-			content = tmpl.render(page=self)
+		self.abs_url = '/' + str(self.dst.relative_to(self.conf['PUBLIC_DIR']))
 
-			_makedirs(self.dst)
-			with self.dst.open('w') as f:
+	def summary(self):
+		more = self.content.find(MORE)
+		if more < 0:
+			raise Exception('%s is missing more scissors' % self.src)
+
+		return self.content[:more]
+
+	def build(self, page_num=0, list_start=0, list_end=0, **kwargs):
+		try:
+			if self.category:
+				page_list = jinja.globals['pages'].posts(self.category)
+				page_list = page_list[list_start:list_end]
+			else:
+				page_list = jinja.globals['pages'].posts()[:self.conf['PER_PAGE']]
+
+			tmpl = jinja.from_string(self.tmpl_content)
+			content = tmpl.render(
+				conf=self.conf,
+				page=self,
+				page_num=page_num,
+				page_list=page_list,
+				**kwargs)
+
+			dst = self.dst
+			if page_num:
+				dst = pathlib.Path('%s/page/%d/%s' % (
+					dst.parent,
+					page_num,
+					dst.name))
+
+			_makedirs(dst)
+			with dst.open('w') as f:
 				f.write(content)
 
 			if not self.conf['DEBUG']:
 				# From: https://github.com/tdewolff/minify/tree/master/cmd/minify
 				status = subprocess.call([
 					'minify',
-					'-o', str(self.dst),
-					str(self.dst)])
+					'-o', str(dst),
+					str(dst)])
 				if status:
 					raise Exception('failed to minify %s' % self.src)
 
-			_mark_used(self.dst)
+			_mark_used(dst)
+
+			scissors = content.find(SCISSORS)
+			scissors_end = content.find(SCISSORS_END)
+			if scissors >= 0 and scissors_end >= 0:
+				return content[scissors+len(SCISSORS):scissors_end]
+
+			return ''
 
 		except Exception as e:
 			# Wrap all exceptions: there are issues with pickling and custom
@@ -285,7 +384,7 @@ class Image(object):
 		else:
 			self.metadata = {}
 
-		self.name, self.category, self.dst = _determine_dest(conf, file)
+		self.name, self.category, self.dst, self.date = _determine_dest(conf, file)
 		self.abs = pathlib.Path('/' + '/'.join(self.dst.parts[1:]))
 
 	def _changed(self, dst):
@@ -443,7 +542,7 @@ def _determine_dest(conf, file, is_page=False):
 	else:
 		dst += '/%s%s' % (name, file.suffix)
 
-	return name, category, pathlib.Path(dst)
+	return name, category, pathlib.Path(dst), date
 
 def _load_data(conf, file):
 	cache = pathlib.Path(conf['CACHE_DIR'] + '/' + str(file))
@@ -498,16 +597,10 @@ def _load_img(conf, file):
 	return Image(conf, file, fm)
 
 def _copy_blob(conf, file):
-	_, _, dst = _determine_dest(conf, file)
+	_, _, dst, _ = _determine_dest(conf, file)
 	_makedirs(dst)
 	_mark_used(dst)
 	shutil.copyfile(str(file), str(dst))
-
-def _css_find_urls(sheet):
-	for url in URLRE.findall(sheet):
-		path = url.replace('"', '').replace("'", '')
-		if path.startswith("/assets/"):
-			yield path[1:], url
 
 def _mark_used(dst, uc=None):
 	if not uc:
@@ -533,3 +626,4 @@ def _makedirs(dst):
 		dst = str(dst.parent)
 
 	os.makedirs(dst, exist_ok=True)
+
