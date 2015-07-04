@@ -4,15 +4,43 @@ title: Gallery
 
 {% extends "base.j2" %}
 
+{% set _dims = {
+	1200: 150,
+	992: 140,
+	768: 130,
+} %}
+
+{% macro thumb(src) %}
+
+{% set img = get_img(src) %}
+
+<picture>
+	{% for minw, dim in _dims.items() %}
+		<source
+			{% if not loop.last %}media="(min-width: {{ minw }}px)"{% endif %}
+			srcset="{% for i in range(3) -%}
+				{%- set src, _, _ = img.scale(
+					width=dim * (i + 1),
+					height=dim * (i + 1),
+					crop=True) -%}
+				{{ src }} {{ i + 1}}x{%- if not loop.last %}, {% endif -%}
+			{%- endfor %}" />
+	{% endfor %}
+
+	{%- set src, _, _ = img.scale(
+		width=150,
+		height=150,
+		crop=True) -%}
+	<img src="{{ src }}" />
+</picture>
+
+{% endmacro %}
+
 {% block content %}
 	<section id="gallery">
 		{% for img in imgs.all() %}
-			<div class="image">
-				{{ macros.img(img,
-					width=150,
-					height=150,
-					crop=True,
-					in_post=False) }}
+			<div class="image col-xs-6 col-sm-3 col-md-2 col-lg-2">
+				{{ thumb(img) }}
 			</div>
 		{% endfor %}
 	</section>

@@ -13,10 +13,12 @@
 <body>
 	<header>
 		<nav class="container-fluid">
-			<div class="col-md-2 col-md-offset-3">
-				<a href="/" class="logo">Andrew Stone</a>
+			<div class="col-xs-3 col-sm-4 col-md-3 col-md-offset-2">
+				<a href="/" class="name">
+					<span class="hidden-xs">Andrew</span> Stone
+				</a>
 			</div>
-			<div class="col-md-4">
+			<div class="col-xs-9 col-sm-8 col-md-5">
 				<ul class="nav nav-pills">
 					{% for item in conf.NAV %}
 						<li{% if page.category == item[1] %} class="active"{% endif %}>

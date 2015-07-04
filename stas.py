@@ -16,6 +16,7 @@ import urllib.parse
 import frontmatter
 import jinja2
 import markdown
+import PIL.Image
 import webassets
 
 IMG_EXTS = [
@@ -26,6 +27,7 @@ IMG_EXTS = [
 
 URLRE = re.compile(r'url\((.*?)\)')
 SCALEDRE = re.compile(r'.*(\.s(\d*x\d*c?)).*')
+IDENTIFY_DIMS = re.compile(r'\d*x\d*')
 
 SCISSORS = '<!-- >8 stas-content -->'
 SCISSORS_END = '<!-- stas-content 8< -->'
@@ -391,8 +393,12 @@ class Image(object):
 
 		self.gallery = self.metadata.get('gallery', True)
 
-		self.name, self.category, self.dst, self.date = _determine_dest(conf, file)
+		self.name, \
+			self.category, \
+			self.dst, \
+			self.date = _determine_dest(conf, file)
 		self.abs = pathlib.Path('/' + '/'.join(self.dst.parts[1:]))
+		self._width, self._height = PIL.Image.open(str(self.src)).size
 
 	def _changed(self, dst):
 		try:
@@ -428,7 +434,11 @@ class Image(object):
 
 			os.utime(str(dst), (0, self.stat.st_mtime))
 
-	def scale(self, width, height, crop, ext, as_job=False):
+	def title(self):
+		return self.metadata.get('title', '')
+
+
+	def scale(self, width, height, crop, ext=None, as_job=False):
 		if not ext:
 			ext = self.dst.suffix
 
@@ -439,7 +449,16 @@ class Image(object):
 			if as_job:
 				return self.abs, self._copy
 			self._copy()
-			return self.abs
+			dims = PIL.Image.open(str(self.dst)).size
+			return self.abs, dims[0], dims[1]
+
+		width = int(width)
+		height = int(height)
+
+		if not width:
+			width = ''
+		if not height:
+			height = ''
 
 		# Use something like '400x' to scale to a width of 400
 		dims = '%sx%s' % (str(width), str(height))
@@ -454,10 +473,15 @@ class Image(object):
 		abs_path = self.abs.with_name(final_name)
 
 		if as_job:
-			return abs_path, functools.partial(self._scale, dst, scale_dims, crop, dims)
+			return abs_path, functools.partial(self._scale,
+				dst,
+				scale_dims,
+				crop,
+				dims)
 
 		self._scale(dst, scale_dims, crop, dims)
-		return abs_path
+		dims = PIL.Image.open(str(dst)).size
+		return abs_path, dims[0], dims[1]
 
 class Jinja(object):
 	def init(conf, assets):
@@ -467,11 +491,10 @@ class Jinja(object):
 				'webassets.ext.jinja2.AssetsExtension',
 			])
 		jinja.filters['markdown'] = Jinja._filter_markdown
-		jinja.filters['img'] = Jinja._filter_img
-		jinja.filters['img_title'] = Jinja._filter_img_title
 		jinja.assets_environment = assets
 
 		jinja.globals['now'] = Jinja._now
+		jinja.globals['get_img'] = Jinja._get_img
 
 		return jinja
 
@@ -481,7 +504,8 @@ class Jinja(object):
 	def _filter_markdown(text):
 		return jinja2.Markup(markdown.markdown(text))
 
-	def _find_img(ctx, src):
+	@jinja2.contextfunction
+	def _get_img(ctx, src):
 		conf = ctx['conf']
 
 		to = src
@@ -494,16 +518,6 @@ class Jinja(object):
 			return ctx['imgs'].get(to)
 		except KeyError:
 			raise Exception('img %s does not exist' % to)
-
-	@jinja2.contextfilter
-	def _filter_img(ctx, src, width=0, height=0, crop='', ext=''):
-		img = Jinja._find_img(ctx, src)
-		return img.scale(width, height, crop, ext)
-
-	@jinja2.contextfilter
-	def _filter_img_title(ctx, src):
-		img = Jinja._find_img(ctx, src)
-		return img.metadata.get('title', '')
 
 def _parse_datetime(dir):
 	date = datetime.datetime.strptime(

@@ -2,6 +2,7 @@ closure==20150315
 cssmin==0.2.0
 jinja2==2.7.3
 Markdown
+pillow==2.9.0
 pyScss==1.3.4
 python-frontmatter==0.2.1
 watchdog==0.8.3

@@ -4,6 +4,7 @@ import argparse
 import http.server
 import importlib
 import os
+import pathlib
 import sys
 import traceback
 
@@ -29,12 +30,12 @@ class Builder(watchdog.events.FileSystemEventHandler):
 			traceback.print_exc()
 
 class Reloader(watchdog.events.FileSystemEventHandler):
-	def __init__(self, conf_file, server):
-		self.conf_file = conf_file
+	def __init__(self, cfg_file, server):
+		self.cfg_file = cfg_file
 		self.server = server
 
 	def on_any_event(self, event):
-		if self.conf_file in event.src_path or 'stas.py' in event.src_path:
+		if self.cfg_file in event.src_path or 'stas.py' in event.src_path:
 			print("Python change detected, reloading...")
 			self.server.shutdown()
 
@@ -43,24 +44,20 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 		path = os.path.join(self.conf.PUBLIC_DIR, '.' + path)
 		return super().translate_path(path)
 
-def main(debug):
-	conf_mod = 'conf_debug'
-	if not debug:
-		conf_mod = 'conf_publish'
-	conf_file = conf_mod + '.py'
-
+def main(cfg_file):
+	conf_mod = pathlib.Path(cfg_file).stem
 	conf = importlib.import_module(conf_mod)
 	importlib.reload(conf)
 
 	builder = Builder(conf)
-	builder.build(debug=debug)
+	builder.build(debug=conf.DEBUG)
 
-	if not debug:
-		return
+	if not conf.DEBUG:
+		return False
 
 	RequestHandler.conf = conf
 	server = http.server.HTTPServer(('', conf.DEBUG_PORT), RequestHandler)
-	reloader = Reloader(conf_file, server)
+	reloader = Reloader(cfg_file, server)
 
 	observer = watchdog.observers.Observer()
 	observer.schedule(builder, conf.CONTENT_DIR, recursive=True)
@@ -75,16 +72,15 @@ def main(debug):
 	server.socket.close()
 	observer.stop()
 
+	return True
+
 if __name__ == '__main__':
 	arg_parser = argparse.ArgumentParser(description='build this site')
-	arg_parser.add_argument('--debug',
-		action='store_const',
-		const=True,
-		help='build in debug mode')
+	arg_parser.add_argument('config',
+		metavar='CONFIG',
+		type=str)
 	args = arg_parser.parse_args()
 
-	if not args.debug:
-		main(False)
-	else:
-		while True:
-			main(True)
+	while main(args.config):
+		pass
+

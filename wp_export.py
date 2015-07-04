@@ -71,7 +71,7 @@ for item in root.findall('channel')[0].findall('item'):
 		src = re.sub(dims, '', src)
 		base = os.path.basename(src)
 
-		repl = '{{ macros.img("%s") }}' % (base)
+		repl = '{{ macros.pimg("%s") }}' % (base)
 		pq(imga).replaceWith(repl)
 
 		dst = path + '/' + base
@@ -84,10 +84,10 @@ for item in root.findall('channel')[0].findall('item'):
 	content = pqc.html()
 	content = content.replace('  ', ' ')
 
-	# with open(page, 'w') as f:
-	# 	f.write(post_format.format(
-	# 		title=title,
-	# 		content=content))
+	with open(page, 'w') as f:
+		f.write(post_format.format(
+			title=title,
+			content=content))
 
 for job in jobs:
 	job.get()

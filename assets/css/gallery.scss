@@ -1,7 +1,17 @@
 #gallery {
+	text-align: center;
+
 	.image {
-		height: 150px;
-		width: 150px;
-		margin: 2px;
+		margin-bottom: 3%;
+	}
+
+	picture {
+		background: #fcfcfc;
+		display: inline-block;
+		padding: 4px;
+
+		&:hover {
+			background: #c0c0c0;
+		}
 	}
 }

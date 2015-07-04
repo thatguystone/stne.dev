@@ -13,28 +13,32 @@
 
 {% endmacro %}
 
-{% macro img(src, width="", height="", crop=False, ext="", in_post=True) %}
+{% macro img(src, width=0, height=0, crop=False, ext="") %}
 
-{% if in_post %}<p class="img">{% endif %}
+{% set i = get_img(src) %}
+{% set src, width, height = i.scale(
+	width=width,
+	height=height,
+	crop=crop,
+	ext=ext) %}
+<img src="{{ src }}"
+	alt="{{ i.title() }}"
+	title="{{ i.title() }}"
+	width="{{ width }}"
+	height="{{ height }}" />
 
-{% if in_post and not width %}
-	{% set width = 560 %}
-{% endif %}
+{% endmacro %}
 
-{% if in_post and not height %}
-	{% set height = "" %}
-{% endif %}
+{% macro pimg(src, crop=False, ext="") %}
 
-<img src="{{ src|img(width=width, height=height, crop=crop, ext=ext) }}"
-	alt="{{ src|img_title }}"
-	title="{{ src|img_title }}"/>
-
-{% if in_post %}</p>{% endif %}
+<p class="img">
+	{{ img(src, width=560) }}
+</p>
 
 {% endmacro %}
 
 {% macro highlight(lang) %}
 
-<pre><code class="{{ lang }}">{{ caller() }}</code></pre>
+	<pre><code class="{{ lang }}">{{ caller() }}</code></pre>
 
 {% endmacro %}

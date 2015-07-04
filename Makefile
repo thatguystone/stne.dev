@@ -1,8 +1,8 @@
 debug: ve
-	./build.py --debug
+	./build.py conf_debug.py
 
 publish: ve
-	./build.py
+	./build.py conf_publish.py
 	rsync -av --delete public/ stoney.io:/var/www/stoney.io/
 
 clean:
