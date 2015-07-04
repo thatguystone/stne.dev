@@ -167,7 +167,7 @@ class Stas(object):
 				img_jobs.append(pool.apply_async(
 					_load_img,
 					(self.conf, f, )))
-			elif f.is_file():
+			elif f.is_file() and f.suffix != '.meta':
 				blobs.append(f)
 
 		path = pathlib.Path(self.conf['PUBLIC_DIR'])
@@ -305,7 +305,7 @@ class Page(object):
 			conf, file,
 			is_page=True)
 
-		self.abs_url = '/' + str(self.dst.relative_to(self.conf['PUBLIC_DIR']))
+		self.abs_url = '/' + str(self.dst.relative_to(self.conf['PUBLIC_DIR']).parent) + '/'
 
 	def summary(self):
 		more = self.content.find(MORE)
@@ -371,6 +371,11 @@ class Images(object):
 	def get(self, path):
 		return self.imgs[path]
 
+	def all(self):
+		imgs = [str(img.src) for img in self.imgs.values() if img.gallery]
+		imgs.sort(reverse=True)
+		return imgs
+
 	def add(self, img):
 		self.imgs[str(img.src)] = img
 
@@ -383,6 +388,8 @@ class Image(object):
 			self.metadata = fm.metadata
 		else:
 			self.metadata = {}
+
+		self.gallery = self.metadata.get('gallery', True)
 
 		self.name, self.category, self.dst, self.date = _determine_dest(conf, file)
 		self.abs = pathlib.Path('/' + '/'.join(self.dst.parts[1:]))
@@ -434,7 +441,8 @@ class Image(object):
 			self._copy()
 			return self.abs
 
-		dims = '%dx%d' % (width, height)
+		# Use something like '400x' to scale to a width of 400
+		dims = '%sx%s' % (str(width), str(height))
 		scale_dims = dims
 		suffix = dims
 		if crop:
@@ -460,6 +468,7 @@ class Jinja(object):
 			])
 		jinja.filters['markdown'] = Jinja._filter_markdown
 		jinja.filters['img'] = Jinja._filter_img
+		jinja.filters['img_title'] = Jinja._filter_img_title
 		jinja.assets_environment = assets
 
 		jinja.globals['now'] = Jinja._now
@@ -472,16 +481,29 @@ class Jinja(object):
 	def _filter_markdown(text):
 		return jinja2.Markup(markdown.markdown(text))
 
-	@jinja2.contextfilter
-	def _filter_img(ctx, src, width=0, height=0, crop='', ext=''):
-		to = str(ctx['page'].src.parent) + '/' + src
+	def _find_img(ctx, src):
+		conf = ctx['conf']
+
+		to = src
+		if not src.startswith(conf['CONTENT_DIR']):
+			to = str(ctx['page'].src.parent) + '/' + src
+
 		to = os.path.normpath(to)
 
 		try:
-			img = ctx['imgs'].get(to)
-			return img.scale(width, height, crop, ext)
+			return ctx['imgs'].get(to)
 		except KeyError:
 			raise Exception('img %s does not exist' % to)
+
+	@jinja2.contextfilter
+	def _filter_img(ctx, src, width=0, height=0, crop='', ext=''):
+		img = Jinja._find_img(ctx, src)
+		return img.scale(width, height, crop, ext)
+
+	@jinja2.contextfilter
+	def _filter_img_title(ctx, src):
+		img = Jinja._find_img(ctx, src)
+		return img.metadata.get('title', '')
 
 def _parse_datetime(dir):
 	date = datetime.datetime.strptime(

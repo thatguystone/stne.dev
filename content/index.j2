@@ -21,7 +21,7 @@ list_page: true
 		};
 	</script>
 
-	<div class="col-md-9 post-list">
+	<div class="col-md-9 home-post-list">
 		<h3>Recent Posts</h3>
 		<hr>
 		{% for page in page_list %}
@@ -39,8 +39,8 @@ list_page: true
 				<div class="row summary">
 					{{ page.summary() }}
 				</div>
-				<hr>
 			</section>
+			<hr>
 		{% endfor %}
 	</div>
 

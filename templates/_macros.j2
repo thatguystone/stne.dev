@@ -1,13 +1,35 @@
-{% macro img(src, width=0, height=0, crop=False, ext="", alt="", inline=True) %}
+{% macro post_header(page, link=True) %}
 
-{% if not inline %}<p>{% endif %}
+	<div class="row">
+		<time datetime="{{ page.date.isoformat() }}" class="col-md-2 h6">
+			{{ page.date.strftime("%Y-%m-%d") }}
+		</time>
+		<h1 class="col-md-10">
+			{% if link %}<a href="{{ page.abs_url }}">{% endif %}
+				{{ page.metadata.title }}
+			{% if link %}</a>{% endif %}
+		</h1>
+	</div>
 
-<img
-	src="{{ src|img(width=width, height=height, crop=crop, ext=ext) }}"
-	{% if alt %}alt="{{ alt }}"{% endif %}
-	/>
+{% endmacro %}
 
-{% if not inline %}</p>{% endif %}
+{% macro img(src, width="", height="", crop=False, ext="", in_post=True) %}
+
+{% if in_post %}<p class="img">{% endif %}
+
+{% if in_post and not width %}
+	{% set width = 560 %}
+{% endif %}
+
+{% if in_post and not height %}
+	{% set height = "" %}
+{% endif %}
+
+<img src="{{ src|img(width=width, height=height, crop=crop, ext=ext) }}"
+	alt="{{ src|img_title }}"
+	title="{{ src|img_title }}"/>
+
+{% if in_post %}</p>{% endif %}
 
 {% endmacro %}
 

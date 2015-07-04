@@ -1,0 +1,19 @@
+---
+title: Gallery
+---
+
+{% extends "base.j2" %}
+
+{% block content %}
+	<section id="gallery">
+		{% for img in imgs.all() %}
+			<div class="image">
+				{{ macros.img(img,
+					width=150,
+					height=150,
+					crop=True,
+					in_post=False) }}
+			</div>
+		{% endfor %}
+	</section>
+{% endblock %}

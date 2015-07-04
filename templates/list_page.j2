@@ -2,24 +2,16 @@
 
 {% block content %}
 
-<div class="post-list list-page row">
-	{% for page in page_list %}
-		<article class="container-fluid">
-			<div class="row">
-				<time datetime="{{ page.date.isoformat() }}" class="col-md-2 h6">
-					{{ page.date.strftime("%Y-%m-%d") }}
-				</time>
-				<h1 class="col-md-10">
-					<a href="{{ page.abs_url }}">{{ page.metadata.title }}</a>
-				</h1>
-			</div>
+{% for page in page_list %}
+	<article class="container post">
+		{{ macros.post_header(page, link=True) }}
 
-			<div class="row content col-md-offset-2 col-md-8">
-				{{ page.content }}
-			</div>
-		</article>
-	{% endfor %}
-</div>
+		<div class="row content col-md-offset-2 col-md-8">
+			{{ page.content }}
+		</div>
+
+	</article>
+{% endfor %}
 
 <ul class="prev-next nav nav-pills">
 	<li class="pull-left">

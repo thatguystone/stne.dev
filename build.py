@@ -39,8 +39,6 @@ class Reloader(watchdog.events.FileSystemEventHandler):
 			self.server.shutdown()
 
 class RequestHandler(http.server.SimpleHTTPRequestHandler):
-	allow_reuse_address = True
-
 	def translate_path(self, path):
 		path = os.path.join(self.conf.PUBLIC_DIR, '.' + path)
 		return super().translate_path(path)

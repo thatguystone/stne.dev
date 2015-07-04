@@ -2,10 +2,9 @@
 title: Verbinator
 ---
 
-{% extends "base.j2" %}
+{% extends "post.j2" %}
 
-{% block content %}
-{% filter markdown %}
+{% block post %}
 
 Verbinator is a tool to help you understand German. First, you might ask yourself why you would only ever
 want only the verbs of a sentence translated, but how often has it happened that you read an entire sentence, understand
@@ -51,5 +50,4 @@ Well, then you might want to report an issue on [GitHub Issues](https://github.c
 
 Check out the [bookmarklet](../verbinator-bookmarklet/).
 
-{% endfilter %}
 {% endblock %}

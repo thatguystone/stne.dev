@@ -1,0 +1,17 @@
+{% extends "base.j2" %}
+
+{% block content_cut %}
+
+<article class="container post">
+	{{ macros.post_header(page, link=False) }}
+
+	<div class="row content col-md-offset-2 col-md-8">
+		<!-- >8 stas-content -->
+			{% filter markdown %}
+				{% block post %}{% endblock %}
+			{% endfilter %}
+		<!-- stas-content 8< -->
+	</div>
+</article>
+
+{% endblock %}

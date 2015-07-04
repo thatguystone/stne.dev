@@ -18,18 +18,21 @@ NAV = [
 	('Technobabble', 'tech'),
 	('Adventures', 'blog'),
 	('Plagirism', 'projects'),
+	('Gallery', 'gallery'),
 ]
 
 JS = [
-	'js/highlight.js',
-	'js/wordcloud2.js',
+	'js/lib/highlight.js',
+	'js/lib/wordcloud2.js',
 	'js/main.js',
 	'js/home.js',
+	'js/gallery.js',
 ]
 
 CSS = [
-	'css/bootstrap-3.3.5.css',
-	'css/github-gist.css',
+	'css/ext/bootstrap-3.3.5.css',
+	'css/ext/github-gist.css',
 	'css/main.scss',
 	'css/home.scss',
+	'css/gallery.scss',
 ]

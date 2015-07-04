@@ -20,7 +20,7 @@
 				<ul class="nav nav-pills">
 					{% for item in conf.NAV %}
 						<li{% if page.category == item[1] %} class="active"{% endif %}>
-							<a href="/{{ item[1] }}">
+							<a href="/{{ item[1] }}/">
 								{{ item[0] }}
 							</a>
 						</li>
@@ -32,10 +32,12 @@
 		{% block hero %}{% endblock %}
 	</header>
 
-	<div class="container">
-		<!-- >8 stas-content -->
-			{% block content %}{% endblock %}
-		<!-- stas-content 8< -->
+	<div class="container content">
+		{% block content_cut %}
+			<!-- >8 stas-content -->
+				{% block content %}{% endblock %}
+			<!-- stas-content 8< -->
+		{% endblock %}
 	</div>
 
 	<footer>

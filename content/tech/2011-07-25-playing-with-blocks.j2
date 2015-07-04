@@ -1,16 +1,10 @@
 ---
-layout: post
 title: Playing with Blocks
-
-categories: linux
-
-summary: How to repair bad blocks in a Linux filesystem.
 ---
 
-{% extends "base.j2" %}
+{% extends "post.j2" %}
 
-{% block content %}
-{% filter markdown %}
+{% block post %}
 
 So, it turns out today that my external hard drive has a few bad blocks on it, and since it's
 mainly used as an archive, I feel no pressing need to replace it (stupid, yes, I know).  But until
@@ -92,5 +86,4 @@ $# reiserfsck --fix-fixable \
 	--badblocks badblocks /dev/sda1
 {% endcall %}
 
-{% endfilter %}
 {% endblock %}

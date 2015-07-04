@@ -1,6 +1,7 @@
 import datetime
 import multiprocessing
 import os
+import pathlib
 import re
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -15,20 +16,23 @@ ns = {
 	'wp': 'http://wordpress.org/export/1.2/',
 }
 
+meta_format = '''---
+title: "%s"
+---
+'''
+
 post_format = '''---
 title: "{title}"
 ---
 
-{{% extends "base.j2" %}}
+{{% extends "post.j2" %}}
 
-{{% block content %}}
-{{% filter markdown %}}
+{{% block post %}}
 
 <!-- >8 more -->
 
 {content}
 
-{{% endfilter %}}
 {{% endblock %}}
 '''
 
@@ -67,19 +71,23 @@ for item in root.findall('channel')[0].findall('item'):
 		src = re.sub(dims, '', src)
 		base = os.path.basename(src)
 
-		repl = '{{ macros.img("%s", alt="%s", inline=False) }}' % (base, img_title.replace('"', '\\"'))
+		repl = '{{ macros.img("%s") }}' % (base)
 		pq(imga).replaceWith(repl)
 
 		dst = path + '/' + base
+
+		with open(dst + '.meta', 'w') as f:
+			f.write(meta_format % img_title.replace('"', '\\"'))
+
 		# jobs.append(pool.apply_async(fetch, (src, dst)))
 
 	content = pqc.html()
 	content = content.replace('  ', ' ')
 
-	with open(page, 'w') as f:
-		f.write(post_format.format(
-			title=title,
-			content=content))
+	# with open(page, 'w') as f:
+	# 	f.write(post_format.format(
+	# 		title=title,
+	# 		content=content))
 
 for job in jobs:
 	job.get()

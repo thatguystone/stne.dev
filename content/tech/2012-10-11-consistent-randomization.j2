@@ -2,10 +2,9 @@
 title: Consistent Randomization
 ---
 
-{% extends "base.j2" %}
+{% extends "post.j2" %}
 
-{% block content %}
-{% filter markdown %}
+{% block post %}
 
 What, you've never wanted to be randomly consistent? Meaning, you've never wanted to use something that might-as-well be random, but at the same time give you consistent answers based on input? Well, if you have, you know it's a difficult problem, and if you haven't, count yourself lucky, but check out the cool little way I devised.
 
@@ -48,5 +47,4 @@ Quite simply, we take the input value and mod it by 100: this gives us a number 
 
 Mainly, I just found this to be a pretty cool little algorithm. That and the original implementation included huge arrays, a 159 line class, and hilarity when I pointed out this simpler version. Moral of this story: know your algorithms, kids.
 
-{% endfilter %}
 {% endblock %}
