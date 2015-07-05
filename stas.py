@@ -5,6 +5,7 @@ import json
 import math
 import multiprocessing
 import multiprocessing.managers
+import operator
 import os
 import pathlib
 import re
@@ -16,7 +17,6 @@ import urllib.parse
 import frontmatter
 import jinja2
 import markdown
-import PIL.Image
 import webassets
 
 IMG_EXTS = [
@@ -34,8 +34,14 @@ SCISSORS_END = '<!-- stas-content 8< -->'
 MORE = '<!-- >8 more -->'
 
 # Only set from pool processes
-jinja = None
-used_content = None
+_globals = None
+
+class Globals(object):
+	# There are tons of issues passing jinja through pickle, so just have it
+	# passed as an argument across the fork
+	jinja = None
+	unused_content = None
+	jobq = None
 
 class Stas(object):
 	def __init__(self, conf):
@@ -67,10 +73,14 @@ class Stas(object):
 			filters=['pyscss', 'cssmin'],
 			output=combined + '.css'))
 
-		jinja = Jinja.init(self.conf, assets)
-		cpus = multiprocessing.cpu_count() * 2
 		manager = SetManager()
 		manager.start()
+
+		self.cpus = multiprocessing.cpu_count()
+		self.gs = Globals()
+		self.gs.jinja = Jinja.init(self.conf, assets)
+		self.gs.unused_content = manager.set()
+		self.gs.jobq = multiprocessing.Queue()
 
 		# Build the assets before running templates, or each subprocess
 		# tries to build them independently
@@ -78,45 +88,59 @@ class Stas(object):
 		for bundle in assets:
 			asset_urls += bundle.urls()
 
-		with multiprocessing.Pool(cpus, self._winit, (jinja, )) as pool:
-			publics, pages, imgs, data, blobs = self._load(pool, assets)
-			jinja.globals.update({
-				'conf': self.conf,
-				'data': data,
-				'imgs': imgs,
-				'pages': pages,
-			})
+		scalers = []
+		for _ in range(self.cpus):
+			scaler = multiprocessing.Process(target=self._jobq)
+			scaler.start()
+			scalers.append(scaler)
 
-		uc = manager.set(publics)
-		pages.sort()
+		with self.pool() as pool:
+			self._load(pool, assets)
+			pool.close()
+			pool.join()
 
-		with multiprocessing.Pool(cpus, self._winit, (jinja, uc)) as pool:
-			jobs = []
-			page_jobs = []
-			list_pages = []
+		self.pages.sort()
+		self._process_assets(asset_urls)
+		self.gs.jinja.globals.update({
+			'conf': self.conf,
+			'data': self.data,
+			'imgs': self.imgs,
+			'pages': self.pages,
+		})
 
-			for page in pages.iter():
+		list_pages = []
+		with self.pool() as pool:
+			for page in self.pages.iter():
 				if page.metadata.get('list_page', False):
 					list_pages.append(page)
 				else:
-					page_jobs.append((page, pool.apply_async(page.build)))
+					def cb(page):
+						def ret(c):
+							page.content = c
+						return ret
 
-			self._copy_blobs(blobs, pool, jobs)
-			self._finalize_assets(asset_urls, pool, jobs, uc)
+					pool.apply_async(page.build,
+						callback=cb(page),
+						error_callback=_throw)
 
-			for pg in page_jobs:
-				pg[0].content = pg[1].get()
+			self._copy_blobs(pool)
+			pool.close()
+			pool.join()
 
-			# Yet another spawn to get updated page content to these guys
-			with multiprocessing.Pool(cpus, self._winit, (jinja, uc)) as ip:
-				self._build_list_pages(list_pages, pages, ip, jobs)
+		# Yet another spawn to get updated page content to these guys
+		with self.pool() as pool:
+			self._build_list_pages(list_pages, pool)
+			pool.close()
+			pool.join()
 
-				for job in jobs:
-					job.get()
+		for _ in range(len(scalers)):
+			self.gs.jobq.put(None)
+		for s in scalers:
+			s.join()
 
 		# Sorted in reverse, this should make sure that any empty directories
 		# are removed recursively
-		for k in sorted(uc.copy(), reverse=True):
+		for k in sorted(self.gs.unused_content.copy(), reverse=True):
 			if os.path.isfile(k):
 				os.unlink(k)
 			else:
@@ -124,6 +148,9 @@ class Stas(object):
 					os.rmdir(k)
 				except OSError:
 					pass
+
+	def pool(self):
+		return multiprocessing.Pool(self.cpus, self._winit)
 
 	def _conf_dict(self, conf):
 		d = {}
@@ -133,67 +160,66 @@ class Stas(object):
 			d[k] = getattr(conf, k)
 		return d
 
-	def _winit(self, j, uc=None):
+	def _winit(self):
 		signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-		# There are tons of issues passing jinja through pickle, so just have
-		# it passed as an argument across the fork
-		global jinja, used_content
-		jinja = j
-		used_content = uc
+		global _globals
+		_globals = self.gs
+
+	def _jobq(self):
+		self._winit()
+
+		while True:
+			job = self.gs.jobq.get()
+			if not job:
+				return
+			job()
 
 	def _load(self, pool, assets):
-		publics = set()
-		pages = Pages()
-		imgs = Images()
-		data = {}
-		blobs = []
-
-		data_jobs = []
-		page_jobs = []
-		img_jobs = []
+		pages = self.pages = Pages()
+		imgs = self.imgs = Images()
+		data = self.data = {}
+		self.blobs = []
 
 		path = pathlib.Path(self.conf['DATA_DIR'])
 		for f in path.glob('*'):
-			data_jobs.append(pool.apply_async(
+			pool.apply_async(
 				_load_data,
-				(self.conf, f, )))
+				(self.conf, f, ),
+				callback=lambda r: operator.setitem(data, r[0], r[1]),
+				error_callback=_throw)
 
 		path = pathlib.Path(self.conf['CONTENT_DIR'])
 		for f in path.glob('**/*'):
 			if f.suffix == '.j2':
-				page_jobs.append(pool.apply_async(
+				pool.apply_async(
 					_load_page,
-					(self.conf, f, )))
+					(self.conf, f, ),
+					callback=lambda r: pages.add(r),
+					error_callback=_throw)
 			elif f.suffix in IMG_EXTS:
-				img_jobs.append(pool.apply_async(
+				pool.apply_async(
 					_load_img,
-					(self.conf, f, )))
+					(self.conf, f, ),
+					callback=lambda r: imgs.add(r),
+					error_callback=_throw)
 			elif f.is_file() and f.suffix != '.meta':
-				blobs.append(f)
+				self.blobs.append(f)
 
+		uuc = set()
 		path = pathlib.Path(self.conf['PUBLIC_DIR'])
 		for f in path.glob('**/*'):
-			publics.add(str(f))
+			uuc.add(str(f))
 
-		for job in data_jobs:
-			d = job.get()
-			data[d[0]] = d[1]
+		# Bulk update after reading, it's faster
+		self.gs.unused_content.update(uuc)
 
-		for job in page_jobs:
-			pages.add(job.get())
-
-		for job in img_jobs:
-			imgs.add(job.get())
-
-		return publics, pages, imgs, data, blobs
-
-	def _finalize_assets(self, urls, pool, jobs, uc):
+	def _process_assets(self, urls):
 		for url in urls:
 			if not url.startswith(self.conf['PUBLIC_DIR']):
 				url = self.conf['PUBLIC_DIR'] + '/%s' % url
 
-			_mark_used(urllib.parse.urlparse(url).path, uc=uc)
+			_mark_used(urllib.parse.urlparse(url).path, gs=self.gs)
 
 			if '.css' in url:
 				path = urllib.parse.urlparse(url).path
@@ -204,11 +230,10 @@ class Stas(object):
 					match = SCALEDRE.match(rel)
 					if match:
 						rel = rel.replace(match.group(1), '')
-						final, job = self._scale_css_img(rel, match.group(2))
+						final = self._scale_css_img(rel, match.group(2))
 					else:
-						final, job = self._scale_css_img(rel, None)
+						final = self._scale_css_img(rel, None)
 
-					jobs.append(pool.apply_async(job))
 					css = css.replace(css_path, '"%s"' % final)
 
 				with open(path, 'w') as f:
@@ -224,7 +249,7 @@ class Stas(object):
 		img = Image(self.conf, pathlib.Path(url), None)
 
 		if not scale:
-			return img.scale(0, 0, False, None, as_job=True)
+			return img.scale(0, 0, False, gs=self.gs)
 
 		crop = scale.endswith('c')
 		if crop:
@@ -234,31 +259,38 @@ class Stas(object):
 		width = int(sizes[0])
 		height = int(sizes[1])
 
-		return img.scale(width, height, crop, None, as_job=True)
+		return img.scale(width, height, crop, gs=self.gs)
 
-	def _build_list_pages(self, list_pages, pages, pool, jobs):
+	def _build_list_pages(self, list_pages, pool):
 		for page in list_pages:
 			if not page.category:
-				jobs.append(pool.apply_async(page.build))
+				pool.apply_async(page.build,
+					callback=lambda r: r,
+					error_callback=_throw)
 			else:
-				subs = len(pages.cats[page.category])
+				subs = len(self.pages.cats[page.category])
 				page_count = math.ceil(subs / self.conf['PER_PAGE'])
 
 				for page_num in range(page_count):
 					list_start = page_num * self.conf['PER_PAGE']
 					list_end = list_start + self.conf['PER_PAGE']
-					jobs.append(pool.apply_async(page.build, kwds={
-						'page_num': page_num,
-						'list_start': list_start,
-						'list_end': list_end,
-						'list_has_next': page_num < (page_count - 1),
-					}))
+					pool.apply_async(page.build,
+						kwds={
+							'page_num': page_num,
+							'list_start': list_start,
+							'list_end': list_end,
+							'list_has_next': page_num < (page_count - 1),
+						},
+						callback=lambda r: r,
+						error_callback=_throw)
 
-	def _copy_blobs(self, blobs, pool, jobs):
-		for blob in blobs:
-			jobs.append(pool.apply_async(
+	def _copy_blobs(self, pool):
+		for blob in self.blobs:
+			pool.apply_async(
 				_copy_blob,
-				(self.conf, blob, )))
+				(self.conf, blob, ),
+				callback=lambda r: r,
+				error_callback=_throw)
 
 class SetManager(multiprocessing.managers.BaseManager):
 	pass
@@ -318,6 +350,8 @@ class Page(object):
 
 	def build(self, page_num=0, list_start=0, list_end=0, **kwargs):
 		try:
+			jinja = _globals.jinja
+
 			if self.category:
 				page_list = jinja.globals['pages'].posts(self.category)
 				page_list = page_list[list_start:list_end]
@@ -398,7 +432,6 @@ class Image(object):
 			self.dst, \
 			self.date = _determine_dest(conf, file)
 		self.abs = pathlib.Path('/' + '/'.join(self.dst.parts[1:]))
-		self._width, self._height = PIL.Image.open(str(self.src)).size
 
 	def _changed(self, dst):
 		try:
@@ -416,12 +449,13 @@ class Image(object):
 			_makedirs(self.dst)
 			shutil.copyfile(str(self.src), str(self.dst))
 
-	def _scale(self, dst, scale_dims, crop, dims):
+	def _scale(self, dst, scale_dims, crop, dims, quality):
 		_mark_used(dst)
 		if self._changed(dst):
 			args = [
 				'convert',
 				str(self.src),
+				'-quality', str(quality),
 				'-scale', scale_dims]
 
 			if crop:
@@ -437,8 +471,10 @@ class Image(object):
 	def title(self):
 		return self.metadata.get('title', '')
 
+	def scale(self, width, height, crop, quality=92, ext=None, gs=None):
+		if not gs:
+			gs = _globals
 
-	def scale(self, width, height, crop, ext=None, as_job=False):
 		if not ext:
 			ext = self.dst.suffix
 
@@ -446,11 +482,8 @@ class Image(object):
 			ext = '.' + ext
 
 		if not width and not height and not crop and ext == self.dst.suffix:
-			if as_job:
-				return self.abs, self._copy
 			self._copy()
-			dims = PIL.Image.open(str(self.dst)).size
-			return self.abs, dims[0], dims[1]
+			return self.abs
 
 		width = int(width)
 		height = int(height)
@@ -472,16 +505,14 @@ class Image(object):
 		dst = self.dst.with_name(final_name)
 		abs_path = self.abs.with_name(final_name)
 
-		if as_job:
-			return abs_path, functools.partial(self._scale,
-				dst,
-				scale_dims,
-				crop,
-				dims)
+		gs.jobq.put(functools.partial(self._scale,
+			dst,
+			scale_dims,
+			crop,
+			dims,
+			quality))
 
-		self._scale(dst, scale_dims, crop, dims)
-		dims = PIL.Image.open(str(dst)).size
-		return abs_path, dims[0], dims[1]
+		return abs_path
 
 class Jinja(object):
 	def init(conf, assets):
@@ -638,13 +669,13 @@ def _copy_blob(conf, file):
 	_mark_used(dst)
 	shutil.copyfile(str(file), str(dst))
 
-def _mark_used(dst, uc=None):
-	if not uc:
-		uc = used_content
+def _mark_used(dst, gs=None):
+	if not gs:
+		gs = _globals
 
-	if uc:
+	if gs:
 		dst = os.path.normpath(str(dst))
-		uc.discard(dst)
+		gs.unused_content.discard(dst)
 
 def _src_changed(src, dst):
 	try:
@@ -663,3 +694,5 @@ def _makedirs(dst):
 
 	os.makedirs(dst, exist_ok=True)
 
+def _throw(e):
+	raise e

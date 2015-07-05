@@ -1,3 +1,8 @@
+{% set vl = 1200 %}
+{% set vm = 992 %}
+{% set vs = 768 %}
+{% set vxs = 767 %}
+
 {% macro post_header(page, link=True) %}
 
 	<div class="row">
@@ -13,26 +18,46 @@
 
 {% endmacro %}
 
-{% macro img(src, width=0, height=0, crop=False, ext="") %}
+{% macro img(src, dims, crop=False, quality=80, ext="") %}
 
-{% set i = get_img(src) %}
-{% set src, width, height = i.scale(
-	width=width,
-	height=height,
-	crop=crop,
-	ext=ext) %}
-<img src="{{ src }}"
-	alt="{{ i.title() }}"
-	title="{{ i.title() }}"
-	width="{{ width }}"
-	height="{{ height }}" />
+{% set img = get_img(src) %}
+
+<picture>
+	{% for minw, dim in dims.items() %}
+		<source
+			media="({% if loop.last %}max{% else %}min{% endif %}-width: {{ minw }}px)"
+			srcset="{% for i in range(3) -%}
+				{%- set src = img.scale(
+					width=dim * (i + 1),
+					height=dim * (i + 1),
+					crop=crop,
+					quality=quality) -%}
+				{{ src }} {{ i + 1}}x{%- if not loop.last %}, {% endif -%}
+			{%- endfor %}" />
+	{% endfor %}
+
+	{%- set src = img.scale(
+		width=dims[vl],
+		height=dims[vl],
+		crop=crop,
+		quality=quality) -%}
+	<img src="{{ src }}"
+		title="{{ img.title() }}"
+		alt="{{ img.title() }}" />
+</picture>
 
 {% endmacro %}
 
 {% macro pimg(src, crop=False, ext="") %}
 
 <p class="img">
-	{{ img(src, width=560) }}
+	{{ img(src,
+		dims = {
+			vl: 560,
+			vm: 480,
+			vs: 320,
+			vxs: 240,
+		}) }}
 </p>
 
 {% endmacro %}

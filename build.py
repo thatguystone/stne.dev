@@ -83,4 +83,3 @@ if __name__ == '__main__':
 
 	while main(args.config):
 		pass
-
