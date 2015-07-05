@@ -5,11 +5,9 @@
 {% for page in page_list %}
 	<article class="container post">
 		{{ macros.post_header(page, link=True) }}
-
-		<div class="row content col-md-offset-2 col-md-8">
+		{% call macros.post_body() %}
 			{{ page.content|safe }}
-		</div>
-
+		{% endcall %}
 	</article>
 {% endfor %}
 

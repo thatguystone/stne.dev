@@ -6,14 +6,24 @@
 {% macro post_header(page, link=True) %}
 
 	<div class="row">
-		<time datetime="{{ page.date.isoformat() }}" class="col-md-2 h6">
-			{{ page.date.strftime("%Y-%m-%d") }}
-		</time>
-		<h1 class="col-md-10">
+		<h1 class="col-sm-push-2 col-sm-10 col-md-10">
 			{% if link %}<a href="{{ page.abs_url }}">{% endif %}
 				{{ page.metadata.title }}
 			{% if link %}</a>{% endif %}
 		</h1>
+		<time datetime="{{ page.date.isoformat() }}" class="col-sm-pull-10 col-sm-2 col-md-2 col-lg-2 h6">
+			{{ page.date.strftime("%Y-%m-%d") }}
+		</time>
+	</div>
+
+{% endmacro %}
+
+{% macro post_body() %}
+
+	<div class="row content">
+		<div class="col-xs-offset-1 col-xs-10 col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
+			{{ caller() }}
+		</div>
 	</div>
 
 {% endmacro %}
