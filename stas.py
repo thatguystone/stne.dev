@@ -358,7 +358,7 @@ class Page(object):
 		if more < 0:
 			raise Exception('%s is missing more scissors' % self.src)
 
-		return self.content[:more]
+		return jinja2.Markup(self.content[:more])
 
 	def build(self, page_num=0, list_start=0, list_end=0, **kwargs):
 		try:
