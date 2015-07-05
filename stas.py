@@ -460,6 +460,7 @@ class Image(object):
 		if self._changed(self.dst):
 			_makedirs(self.dst)
 			shutil.copyfile(str(self.src), str(self.dst))
+			os.utime(str(self.dst), (0, self.stat.st_mtime))
 
 	def _scale(self, dst, scale_dims, crop, dims, quality):
 		_mark_used(dst)
