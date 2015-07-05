@@ -94,63 +94,72 @@ class Stas(object):
 			scaler.start()
 			scalers.append(scaler)
 
-		with self.pool() as pool:
-			self._load(pool, assets)
-			pool.close()
-			pool.join()
+		try:
+			with self.pool() as pool:
+				self._load(pool, assets)
+				self._pjoin(pool)
 
-		self.pages.sort()
-		self._process_assets(asset_urls)
-		self.gs.jinja.globals.update({
-			'conf': self.conf,
-			'data': self.data,
-			'imgs': self.imgs,
-			'pages': self.pages,
-		})
+			self.pages.sort()
+			self._process_assets(asset_urls)
+			self.gs.jinja.globals.update({
+				'conf': self.conf,
+				'data': self.data,
+				'imgs': self.imgs,
+				'pages': self.pages,
+			})
 
-		list_pages = []
-		with self.pool() as pool:
-			for page in self.pages.iter():
-				if page.metadata.get('list_page', False):
-					list_pages.append(page)
+			list_pages = []
+			with self.pool() as pool:
+				for page in self.pages.iter():
+					if page.metadata.get('list_page', False):
+						list_pages.append(page)
+					else:
+						def cb(page):
+							def ret(c):
+								page.content = c
+							return ret
+
+						pool.apply_async(page.build,
+							callback=cb(page),
+							error_callback=self._async_error)
+
+				self._copy_blobs(pool)
+				self._pjoin(pool)
+
+			# Yet another spawn to get updated page content to these guys
+			with self.pool() as pool:
+				self._build_list_pages(list_pages, pool)
+				self._pjoin(pool)
+
+			# Sorted in reverse, this should make sure that any empty
+			# directories are removed recursively
+			for k in sorted(self.gs.unused_content.copy(), reverse=True):
+				if os.path.isfile(k):
+					os.unlink(k)
 				else:
-					def cb(page):
-						def ret(c):
-							page.content = c
-						return ret
-
-					pool.apply_async(page.build,
-						callback=cb(page),
-						error_callback=_throw)
-
-			self._copy_blobs(pool)
-			pool.close()
-			pool.join()
-
-		# Yet another spawn to get updated page content to these guys
-		with self.pool() as pool:
-			self._build_list_pages(list_pages, pool)
-			pool.close()
-			pool.join()
-
-		for _ in range(len(scalers)):
-			self.gs.jobq.put(None)
-		for s in scalers:
-			s.join()
-
-		# Sorted in reverse, this should make sure that any empty directories
-		# are removed recursively
-		for k in sorted(self.gs.unused_content.copy(), reverse=True):
-			if os.path.isfile(k):
-				os.unlink(k)
-			else:
-				try:
-					os.rmdir(k)
-				except OSError:
-					pass
+					try:
+						os.rmdir(k)
+					except OSError:
+						pass
+		finally:
+			for _ in range(len(scalers)):
+				self.gs.jobq.put(None)
+			for s in scalers:
+				s.join()
 
 	def pool(self):
+		self.errs = []
 		return multiprocessing.Pool(self.cpus, self._winit)
+
+	def _pjoin(self, pool):
+		pool.close()
+		pool.join()
+
+		if len(self.errs):
+			raise Exception(self.errs)
+
+	def _async_error(self, err):
+		self.errs.append(err)
 
 	def _conf_dict(self, conf):
 		d = {}
@@ -187,7 +196,7 @@ class Stas(object):
 				_load_data,
 				(self.conf, f, ),
 				callback=lambda r: operator.setitem(data, r[0], r[1]),
-				error_callback=_throw)
+				error_callback=self._async_error)
 
 		path = pathlib.Path(self.conf['CONTENT_DIR'])
 		for f in path.glob('**/*'):
@@ -196,13 +205,13 @@ class Stas(object):
 					_load_page,
 					(self.conf, f, ),
 					callback=lambda r: pages.add(r),
-					error_callback=_throw)
+					error_callback=self._async_error)
 			elif f.suffix in IMG_EXTS:
 				pool.apply_async(
 					_load_img,
 					(self.conf, f, ),
 					callback=lambda r: imgs.add(r),
-					error_callback=_throw)
+					error_callback=self._async_error)
 			elif f.is_file() and f.suffix != '.meta':
 				self.blobs.append(f)
 
@@ -266,7 +275,7 @@ class Stas(object):
 			if not page.category:
 				pool.apply_async(page.build,
 					callback=lambda r: r,
-					error_callback=_throw)
+					error_callback=self._async_error)
 			else:
 				subs = len(self.pages.cats[page.category])
 				page_count = math.ceil(subs / self.conf['PER_PAGE'])
@@ -282,7 +291,7 @@ class Stas(object):
 							'list_has_next': page_num < (page_count - 1),
 						},
 						callback=lambda r: r,
-						error_callback=_throw)
+						error_callback=self._async_error)
 
 	def _copy_blobs(self, pool):
 		for blob in self.blobs:
@@ -290,7 +299,7 @@ class Stas(object):
 				_copy_blob,
 				(self.conf, blob, ),
 				callback=lambda r: r,
-				error_callback=_throw)
+				error_callback=self._async_error)
 
 class SetManager(multiprocessing.managers.BaseManager):
 	pass
@@ -340,6 +349,9 @@ class Page(object):
 			is_page=True)
 
 		self.abs_url = '/' + str(self.dst.relative_to(self.conf['PUBLIC_DIR']).parent) + '/'
+
+	def title(self):
+		return self.metadata.get('title', '')
 
 	def summary(self):
 		more = self.content.find(MORE)
@@ -431,7 +443,7 @@ class Image(object):
 			self.category, \
 			self.dst, \
 			self.date = _determine_dest(conf, file)
-		self.abs = pathlib.Path('/' + '/'.join(self.dst.parts[1:]))
+		self.abs_url = pathlib.Path('/' + '/'.join(self.dst.parts[1:]))
 
 	def _changed(self, dst):
 		try:
@@ -471,7 +483,7 @@ class Image(object):
 	def title(self):
 		return self.metadata.get('title', '')
 
-	def scale(self, width, height, crop, quality=92, ext=None, gs=None):
+	def scale(self, width=0, height=0, crop=False, quality=92, ext=None, gs=None):
 		if not gs:
 			gs = _globals
 
@@ -483,7 +495,7 @@ class Image(object):
 
 		if not width and not height and not crop and ext == self.dst.suffix:
 			self._copy()
-			return self.abs
+			return self.abs_url
 
 		width = int(width)
 		height = int(height)
@@ -503,7 +515,7 @@ class Image(object):
 
 		final_name = '%s.s%s%s' % (self.dst.stem, suffix, ext)
 		dst = self.dst.with_name(final_name)
-		abs_path = self.abs.with_name(final_name)
+		abs_path = self.abs_url.with_name(final_name)
 
 		gs.jobq.put(functools.partial(self._scale,
 			dst,
@@ -517,6 +529,7 @@ class Image(object):
 class Jinja(object):
 	def init(conf, assets):
 		jinja = jinja2.Environment(
+			autoescape=True,
 			loader=jinja2.FileSystemLoader(conf['TEMPLATE_DIR']),
 			extensions=[
 				'webassets.ext.jinja2.AssetsExtension',
@@ -693,6 +706,3 @@ def _makedirs(dst):
 		dst = str(dst.parent)
 
 	os.makedirs(dst, exist_ok=True)
-
-def _throw(e):
-	raise e

@@ -8,15 +8,17 @@ title: Gallery
 	<section id="gallery">
 		{% for img in imgs.all() %}
 			<div class="image col-xs-6 col-sm-3 col-md-2 col-lg-2">
-				{{ macros.img(img,
-					dims={
-						macros.vl: 150,
-						macros.vm: 140,
-						macros.vs: 130,
-						macros.vxs: 115,
-					},
-					crop=True,
-					quality=80) }}
+				<a href="{{ get_img(img).scale() }}">
+					{{ macros.img(img,
+						dims={
+							macros.vl: 150,
+							macros.vm: 140,
+							macros.vs: 130,
+							macros.vxs: 115,
+						},
+						crop=True,
+						quality=80) }}
+				</a>
 			</div>
 		{% endfor %}
 	</section>
