@@ -1,0 +1,50 @@
+---
+title: Consistent Randomization
+---
+
+{% extends "post.html" %}
+
+{% block post %}
+
+What, you've never wanted to be randomly consistent? Meaning, you've never wanted to use something that might-as-well be random, but at the same time give you consistent answers based on input? Well, if you have, you know it's a difficult problem, and if you haven't, count yourself lucky, but check out the cool little way I devised.
+
+<!-- >8 more -->
+
+## Scenario
+
+At work, we were trying to figure out a way to store only a certain percentage of requests in our cache, but we didn't particularly care which requests were stored and which weren't, but we also wanted to be able to determine quickly if something should be in the cache without asking the cache. In other words: controlled randomness.
+
+At first, this seems like an untenable position, but consider it a bit deeper: what always returns the same result, given the same input, and is suitably "random" (Mitt Romney doesn't count: he's out on the first requirement). Enter hashing algorithms.
+
+## The Hash
+
+Cryptographic hashing algorithms were specifically designed so that their return values represent a uniform distribution of possible values over its output range. For this algorithm, we'll use one of the best-known hashing algorithms out there: MD5 (128 bits). Honestly, the algorithm itself it far shorter than even this sentence. Let's see it:
+
+``` python
+import hashlib
+
+class ConsistentDecision(object):
+    """
+        Used to *consistently* decide on an
+        action based on an input value.
+    """
+    def __init__(self, percentage):
+        # The percentage of values to select
+        self.perc = int(percentage)
+
+    def ask(self, value):
+        return (int(hashlib.md5(str(value))
+            .hexdigest(), 16) % 100) < self.perc
+```
+
+Note: So this is a python class, just for convenience, but it clearly doesn't have to be.
+
+## Why does this work?
+
+Quite simply, we take the input value and mod it by 100: this gives us a number between 0 and 99, and because we used a cryptographic hashing function, we know we have an even distribution of values, so we check to see if our value falls into the `self.perc` bucket (ie. the percentage of values we want to select), and if it does, we simply say `True`.
+
+## Why are you telling me this?
+
+Mainly, I just found this to be a pretty cool little algorithm. That and the original implementation included huge arrays, a 159 line class, and hilarity when I pointed out this simpler version. Moral of this story: know your algorithms, kids.
+
+{% endblock %}

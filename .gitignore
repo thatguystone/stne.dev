@@ -1,5 +1,2 @@
-*.pyc
 .cache/
-__pycache__/
 public/
-ve/

@@ -1,4 +1,4 @@
-#! ve/bin/python
+#! /usr/bin/env python3
 
 import datetime
 import json
@@ -75,6 +75,6 @@ for name, sum in sums.items():
 	sums[name] = int(math.log(sum, 3)) * 3
 
 expires = datetime.datetime.now() + datetime.timedelta(hours=1)
-sums['stas_expires'] = int(expires.timestamp())
+sums['acrylic_expires'] = int(expires.timestamp())
 
 print(json.dumps(sums))

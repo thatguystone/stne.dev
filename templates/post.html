@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content_cut %}
+
+<article class="container post">
+	{{ post_header(page, False) }}
+
+	{# call post_body() #}
+		<!-- >8 stas-content -->
+			{% filter markdown %}
+				{% block post %}{% endblock %}
+			{% endfilter %}
+		<!-- stas-content 8< -->
+	{# endcall #}
+</article>
+
+{% endblock %}

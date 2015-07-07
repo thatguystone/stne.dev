@@ -1,13 +1,9 @@
-debug: ve
-	./build.py conf_debug.py
+debug:
+	acrylic conf_debug.yml
 
-publish: ve
-	./build.py conf_publish.py
-	rsync -av --delete public/ stoney.io:/var/www/stoney.io/
+publish:
+	acrylic conf_debug.yml conf_publish.yml
+	# rsync -av --delete public/ stoney.io:/var/www/stoney.io/
 
 clean:
 	rm -rf public/
-
-ve:
-	virtualenv -p python3 ve
-	ve/bin/pip install -r requirements.txt

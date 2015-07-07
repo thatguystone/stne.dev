@@ -1,0 +1,36 @@
+title: Andrew Stone
+
+assetsDir: assets/
+cacheDir: .cache/
+contentDir: content/
+dataDir: data/
+publicDir: public/
+templateDir: templates/
+
+perPage: 5
+
+debug: True
+
+navs:
+  - title: Technobabble
+    url: tech
+  - title: Adventures
+    url: blog
+  - title: Plagirism
+    url: projects
+  - title: Gallery
+    url: gallery
+
+js:
+  - js/lib/highlight.js
+  - js/lib/wordcloud2.js
+  - js/main.js
+  - js/home.js
+  - js/gallery.js
+
+css:
+  - css/ext/bootstrap-3.3.5.css
+  - css/ext/github-gist.css
+  - css/main.scss
+  - css/home.scss
+  - css/gallery.scss
