@@ -16,14 +16,16 @@ nav:
 
 js:
   - js/lib/highlight.js
+  - js/lib/swipebox.js
   - js/lib/wordcloud2.js
   - js/main.js
   - js/home.js
   - js/gallery.js
 
 css:
-  - css/ext/bootstrap-3.3.5.css
-  - css/ext/github-gist.css
+  - css/lib/bootstrap-3.3.5.css
+  - css/lib/github-gist.css
+  - css/lib/swipebox.scss
   - css/main.scss
   - css/home.scss
   - css/post.scss

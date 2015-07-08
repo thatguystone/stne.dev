@@ -8,9 +8,7 @@ title: Gallery
 	<section id="gallery">
 		{% for src in ac.AllImgs() %}
 			<div class="image col-xs-6 col-sm-3 col-md-2 col-lg-2">
-				<a href="{{ ac.Img(src).Scale(0, 0, false, 0) }}">
-					{{ img(src, ac.Dims(150, 150, 140, 140, 130, 130, 115, 115), true, 80) }}
-				</a>
+				{{ img(src, ac.Dims(150, 150, 140, 140, 130, 130, 115, 115), true, 80) }}
 			</div>
 		{% endfor %}
 	</section>

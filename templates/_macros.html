@@ -34,16 +34,18 @@
 {% macro img(src, dims, crop=false, quality=80) export %}
 
 {% set img = ac.Img(src) %}
-<picture>
-	{{ pic_src(img, dims.L, crop, quality, 1200) }}
-	{{ pic_src(img, dims.M, crop, quality, 992) }}
-	{{ pic_src(img, dims.S, crop, quality, 768) }}
-	{{ pic_src(img, dims.XS, crop, quality, 767) }}
+<a href="{{ img.Scale(0, 0, false, 0) }}" class="swipebox">
+	<picture>
+		{{ pic_src(img, dims.L, crop, quality, 1200) }}
+		{{ pic_src(img, dims.M, crop, quality, 992) }}
+		{{ pic_src(img, dims.S, crop, quality, 768) }}
+		{{ pic_src(img, dims.XS, crop, quality, 767) }}
 
-	<img src="{{ img.Scale(dims.L.W, dims.L.H, crop, quality) }}"
-		title="{{ img.Title }}"
-		alt="{{ img.Title }}" />
-</picture>
+		<img src="{{ img.Scale(dims.L.W, dims.L.H, crop, quality) }}"
+			title="{{ img.Title }}"
+			alt="{{ img.Title }}" />
+	</picture>
+</a>
 
 {% endmacro %}
 
