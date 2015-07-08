@@ -13,13 +13,17 @@
 
 {% endmacro %}
 
-{% macro post_body(page) export %}
+{% macro post_body_open() export %}
 
-	<div class="row content">
-		<div class="col-xs-offset-1 col-xs-10 col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
-			{{ page.Content|safe }}
-		</div>
-	</div>
+<div class="row content">
+	<div class="col-xs-offset-1 col-xs-10 col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
+
+{% endmacro %}
+
+{% macro post_body_close() export %}
+
+</div>
+</div>
 
 {% endmacro %}
 

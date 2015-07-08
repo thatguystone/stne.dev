@@ -5,7 +5,10 @@
 {% for page in pages %}
 	<article class="container post">
 		{{ post_header(page, true) }}
-		{{ post_body(page) }}
+
+		{{ post_body_open() }}
+			{{ page.Content|safe }}
+		{{ post_body_close() }}
 	</article>
 {% endfor %}
 

@@ -3,15 +3,15 @@
 {% block content_cut %}
 
 <article class="container post">
-	{{ post_header(page, False) }}
+	{{ post_header(page, false) }}
 
-	{# call post_body() #}
+	{{ post_body_open() }}
 		<!-- >8 stas-content -->
-			{% filter markdown %}
-				{% block post %}{% endblock %}
-			{% endfilter %}
+		{% filter markdown %}
+			{% block post %}{% endblock %}
+		{% endfilter %}
 		<!-- stas-content 8< -->
-	{# endcall #}
+	{{ post_body_close() }}
 </article>
 
 {% endblock %}
