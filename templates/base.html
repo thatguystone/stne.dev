@@ -21,8 +21,8 @@
 				</div>
 				<div class="col-xs-9 col-sm-8 col-md-7 col-lg-5">
 					<ul class="nav nav-pills">
-						{% for item in conf.NAV %}
-							<li{% if page.category == item.URL %} class="active"{% endif %}>
+						{% for item in ac.Cfg().Nav %}
+							<li{% if page.Cat == item.URL %} class="active"{% endif %}>
 								<a href="/{{ item.URL }}/">
 									{{ item.Title }}
 								</a>

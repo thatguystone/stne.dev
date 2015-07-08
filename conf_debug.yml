@@ -1,17 +1,10 @@
 title: Andrew Stone
 
-assetsDir: assets/
-cacheDir: .cache/
-contentDir: content/
-dataDir: data/
-publicDir: public/
-templateDir: templates/
-
-perPage: 5
+perpage: 5
 
 debug: True
 
-navs:
+nav:
   - title: Technobabble
     url: tech
   - title: Adventures
@@ -33,4 +26,5 @@ css:
   - css/ext/github-gist.css
   - css/main.scss
   - css/home.scss
+  - css/post.scss
   - css/gallery.scss

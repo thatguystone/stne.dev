@@ -6,7 +6,7 @@ title: Consistent Randomization
 
 {% block post %}
 
-What, you've never wanted to be randomly consistent? Meaning, you've never wanted to use something that might-as-well be random, but at the same time give you consistent answers based on input? Well, if you have, you know it's a difficult problem, and if you haven't, count yourself lucky, but check out the cool little way I devised.
+What, you've never wanted to be randomly consistent? Meaning, you've never wanted to use something that might-as-well be random, but at the same time give you consistent answers based on input? The solution just requires a small but of insight and a small bit of code. Let's check it out.
 
 <!-- >8 more -->
 
@@ -37,7 +37,7 @@ class ConsistentDecision(object):
             .hexdigest(), 16) % 100) < self.perc
 ```
 
-Note: So this is a python class, just for convenience, but it clearly doesn't have to be.
+> Note: So this is a python class, just for convenience, but it clearly doesn't have to be.
 
 ## Why does this work?
 

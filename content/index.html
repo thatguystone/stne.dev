@@ -1,5 +1,6 @@
 ---
 list_page: true
+title: ""
 ---
 
 {% extends "base.html" %}
@@ -14,8 +15,8 @@ list_page: true
 		var wordCloudData = {
 			id: "contrib-cloud",
 			data: [
-				{% for p, c in data.contribs.items() %}
-					['{{ p }}', {{ c }}],
+				{% for p, c in ac.Data("contribs") %}
+					['{{ p }}', {{ c|integer }}],
 				{% endfor %}
 			],
 		};
@@ -24,20 +25,20 @@ list_page: true
 	<div class="col-md-9 home-post-list">
 		<h3>Recent Posts</h3>
 		<hr>
-		{% for page in page_list %}
+		{% for page in pages %}
 			<section class="container-fluid">
 				<div class="row">
 					<h1 class="col-md-10">
-						<a href="{{ page.abs_url }}">{{ page.metadata.title }}</a>
+						<a href="{{ page.URL }}">{{ page.Title }}</a>
 					</h1>
 
-					<time datetime="{{ page.date.isoformat() }}" class="col-md-2">
-						{{ page.date.strftime("%Y-%m-%d") }}
+					<time class="col-md-2">
+						{{ page.Date.Format("2006-01-02") }}
 					</time>
 				</div>
 
 				<div class="row summary">
-					{{ page.summary() }}
+					{{ page.Summary|safe }}
 				</div>
 			</section>
 			<hr>
@@ -49,5 +50,4 @@ list_page: true
 		<hr>
 		<div id="contrib-cloud"></div>
 	</div>
-
 {% endblock %}
