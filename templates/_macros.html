@@ -1,23 +1,23 @@
-{% macro post_header(page, link=True) export %}
+{% macro post_header(page, link=true) export %}
 
 	<div class="row">
 		<h1 class="col-sm-push-2 col-sm-10 col-md-10">
-			{% if link %}<a href="{{ page.abs_url }}">{% endif %}
-				{{ page.metadata.title }}
+			{% if link %}<a href="{{ page.URL }}">{% endif %}
+				{{ page.Title }}
 			{% if link %}</a>{% endif %}
 		</h1>
-		<time datetime="{{ page.date.isoformat() }}" class="col-sm-pull-10 col-sm-2 col-md-2 col-lg-2 h6">
-			{{ page.date.strftime("%Y-%m-%d") }}
+		<time class="col-sm-pull-10 col-sm-2 col-md-2 col-lg-2 h6">
+			{{ page.Date.Format("2006-01-02") }}
 		</time>
 	</div>
 
 {% endmacro %}
 
-{% macro post_body() export %}
+{% macro post_body(page) export %}
 
 	<div class="row content">
 		<div class="col-xs-offset-1 col-xs-10 col-sm-offset-2 col-sm-8 col-md-offset-3 col-md-6">
-			{{ caller() }}
+			{{ page.Content|safe }}
 		</div>
 	</div>
 
@@ -45,10 +45,6 @@
 		alt="{{ img.Title }}" />
 </picture>
 
-{% endmacro %}
-
-{% macro another() export %}
-test
 {% endmacro %}
 
 {% macro pimg(src) export %}

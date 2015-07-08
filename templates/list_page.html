@@ -2,32 +2,31 @@
 
 {% block content %}
 
-{% for page in page_list %}
+{% for page in pages %}
 	<article class="container post">
-		{{ macros.post_header(page, True) }}
-		{# call macros.post_body() #}
-		{{ page.content|safe }}
+		{{ post_header(page, true) }}
+		{{ post_body(page) }}
 	</article>
 {% endfor %}
 
 <ul class="prev-next nav nav-pills">
 	<li class="pull-left">
-		{% if page_num != 0 %}
-			{% if page_num == 1 %}
+		{% if pageNum != 1 %}
+			{% if pageNum == 2 %}
 				<a href="../..">Newer Posts</a>
 			{% else %}
-				<a href="../{{ page_num - 1 }}/">Newer Posts</a>
+				<a href="../{{ pageNum - 1 }}/">Newer Posts</a>
 			{% endif %}
 
 		{% endif %}
 	</li>
 
 	<li class="pull-right next">
-		{% if list_has_next %}
-			{% if page_num == 0 %}
-				<a href="page/{{ page_num + 1 }}/">Older Posts</a>
+		{% if listHasNext %}
+			{% if pageNum == 1 %}
+				<a href="page/{{ pageNum + 1 }}/">Older Posts</a>
 			{% else %}
-				<a href="../{{ page_num + 1 }}/">Older Posts</a>
+				<a href="../{{ pageNum + 1 }}/">Older Posts</a>
 			{% endif %}
 		{% endif %}
 	</li>
