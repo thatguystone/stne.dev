@@ -186,7 +186,7 @@
 				} );
 
 				$this.setDim();
-				$this.actions();
+				$this.actions(isTouch);
 
 				if ( isTouch ) {
 					$this.gesture();
@@ -556,7 +556,7 @@
 			/**
 			 * Navigation events : go to next slide, go to prevous slide and close
 			 */
-			actions : function () {
+			actions : function (isTouch) {
 				var $this = this,
 					action = 'touchend click'; // Just detect for both event types to allow for multi-input
 
@@ -574,17 +574,19 @@
 					$this.setTimeout();
 				}
 
-				$('#swipebox-overlay').click(function() {
-					$this.closeSlide();
-				});
+				if (!isTouch) {
+					$('#swipebox-overlay').on(action, function(e) {
+						$this.closeSlide();
+					});
 
-				$('#swipebox-overlay').on('click', 'img', function(e) {
-					if (e.offsetX < ($(this).width() / 2)) {
-						prev(e);
-					} else {
-						next(e);
-					}
-				});
+					$('#swipebox-overlay').on('click', 'img', function(e) {
+						if (e.offsetX < ($(this).width() / 2)) {
+							prev(e);
+						} else {
+							next(e);
+						}
+					});
+				}
 
 				if ( elements.length < 2 ) {
 
