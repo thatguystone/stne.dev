@@ -37,23 +37,22 @@
 			winWidth = window.innerWidth ? window.innerWidth : $( window ).width(),
 			winHeight = window.innerHeight ? window.innerHeight : $( window ).height(),
 			currentX = 0,
-			/* jshint multistr: true */
-			html = '<div id="swipebox-background"></div>\
-				<div id="swipebox-overlay">\
-					<div id="swipebox-container">\
-						<div id="swipebox-slider"></div>\
-						<div id="swipebox-top-bar">\
-							<div id="swipebox-title"></div>\
-						</div>\
-						<div id="swipebox-bottom-bar">\
-							<div id="swipebox-arrows">\
-								<a id="swipebox-prev"></a>\
-								<a id="swipebox-next"></a>\
-							</div>\
-						</div>\
-						<a id="swipebox-close"></a>\
-					</div>\
-			</div>';
+			html = '<div id="swipebox-background"></div>' +
+				'<div id="swipebox-overlay">' +
+					'<div id="swipebox-container">' +
+						'<div id="swipebox-slider"></div>' +
+						'<div id="swipebox-top-bar">' +
+							'<div id="swipebox-title"></div>' +
+						'</div>' +
+						'<div id="swipebox-bottom-bar">' +
+							'<div id="swipebox-arrows">' +
+								'<a id="swipebox-prev"></a>' +
+								'<a id="swipebox-next"></a>' +
+							'</div>' +
+						'</div>' +
+						'<a id="swipebox-close"></a>' +
+					'</div>' +
+				'</div>';
 
 		plugin.settings = {};
 
