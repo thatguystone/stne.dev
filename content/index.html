@@ -16,7 +16,7 @@ title: ""
 			id: "contrib-cloud",
 			data: [
 				{% for p, c in ac.Data("contribs") %}
-					['{{ p }}', {{ c|integer }}],
+					['{{ p }}', {{ c.total|integer }}, '{{ c.url }}'],
 				{% endfor %}
 			],
 		};

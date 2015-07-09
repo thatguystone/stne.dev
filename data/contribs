@@ -12,32 +12,110 @@ go_ihr = go_github + '/iheartradio'
 go = go_github + '/thatguystone'
 
 repos = {
-	'acrylic': go + '/acrylic',
-	'approxidate': '../approxidate',
-	'arduino': '../arduino',
-	'assert': go + '/assert',
-	'debs': '../debs',
-	'ffmpeg': go_ihr + '/optimus/lib/ffmpeg',
-	'gocovr': go + '/gocovr',
-	'gofreetds': go_github + '/minus5/gofreetds',
-	'gomcketama': go + '/gomcketama',
-	'goquery': go_github + '/PuerkitoBio/goquery',
-	'libquickio-client': '../../IHR/quick.io/client-c',
-	'lintartarus': '../lintartarus',
-	'murmur': '../murmur',
-	'ohmyrss': go + '/ohmyrss',
-	'optimus': go_ihr + '/optimus',
-	'paratec': go_ihr + '/optimus/lib/paratec',
-	'pontoon': go_ihr + '/pontoon',
-	'quick': '../../IHR/quick',
-	'quick.io': '../../IHR/quick.io/quick.io',
-	'quickigo': go_ihr + '/quickigo',
-	'QuickIoClient': '../../IHR/quick.io/client-java',
-	'QuickiOS': '../../IHR/quick.io/client-ios',
-	'quickjs': '../../IHR/quick.io/client-js',
-	'svnstash': '../svnstash',
-	'swan': go + '/swan',
-	'verbinator': '../verbinator',
+	'acrylic': {
+		'url': 'https://github.com/thatguystone/acrylic',
+		'path': go + '/acrylic',
+	},
+	'approxidate': {
+		'url': 'https://github.com/thatguystone/approxidate',
+		'path': '../approxidate',
+	},
+	'arduino': {
+		'url': 'https://github.com/thatguystone/arduino',
+		'path': '../arduino',
+	},
+	'assert': {
+		'url': 'https://github.com/thatguystone/assert',
+		'path': go + '/assert',
+	},
+	'debs': {
+		'url': 'https://github.com/thatguystone/debs',
+		'path': '../debs',
+	},
+	'ffmpeg': {
+		'url': 'https://github.com/thatguystone/FFmpeg',
+		'path': go_ihr + '/optimus/lib/ffmpeg',
+	},
+	'gocovr': {
+		'url': 'https://github.com/thatguystone/gocovr',
+		'path': go + '/gocovr',
+	},
+	'gofreetds': {
+		'url': 'https://github.com/minus5/gofreetds',
+		'path': go_github + '/minus5/gofreetds',
+	},
+	'gomcketama': {
+		'url': 'https://github.com/thatguystone/gomcketama',
+		'path': go + '/gomcketama',
+	},
+	'goquery': {
+		'url': 'https://github.com/PuerkitoBio/goquery',
+		'path': go_github + '/PuerkitoBio/goquery',
+	},
+	'libquickio-client': {
+		'url': 'https://github.com/iheartradio/libquickio-client',
+		'path': '../../IHR/quick.io/client-c',
+	},
+	'lintartarus': {
+		'url': 'https://github.com/thatguystone/lintartarus',
+		'path': '../lintartarus',
+	},
+	'murmur': {
+		'url': 'https://github.com/thatguystone/murmur',
+		'path': '../murmur',
+	},
+	'ohmyrss': {
+		'url': 'https://github.com/thatguystone/ohmyrss',
+		'path': go + '/ohmyrss',
+	},
+	'optimus': {
+		'url': '/projects/optimus/',
+		'path': go_ihr + '/optimus',
+	},
+	'paratec': {
+		'url': 'https://github.com/thatguystone/paratec',
+		'path': go_ihr + '/optimus/lib/paratec',
+	},
+	'pontoon': {
+		'url': '/projects/pontoon/',
+		'path': go_ihr + '/pontoon',
+	},
+	'quick': {
+		'url': 'https://github.com/iheartradio/quick-event/tree/modular',
+		'path': '../../IHR/quick',
+	},
+	'quick.io': {
+		'url': 'https://github.com/iheartradio/quick.io',
+		'path': '../../IHR/quick.io/quick.io',
+	},
+	'quickigo': {
+		'url': 'https://github.com/iheartradio/quickigo',
+		'path': go_ihr + '/quickigo',
+	},
+	'QuickIoClient': {
+		'url': 'https://github.com/iheartradio/QuickIoClient',
+		'path': '../../IHR/quick.io/client-java',
+	},
+	'QuickiOS': {
+		'url': 'https://github.com/iheartradio/QuickiOS',
+		'path': '../../IHR/quick.io/client-ios',
+	},
+	'quickjs': {
+		'url': 'https://github.com/iheartradio/quickjs',
+		'path': '../../IHR/quick.io/client-js',
+	},
+	'svnstash': {
+		'url': 'https://github.com/thatguystone/svnstash',
+		'path': '../svnstash',
+	},
+	'swan': {
+		'url': 'https://github.com/thatguystone/swan',
+		'path': go + '/swan',
+	},
+	'verbinator': {
+		'url': 'https://github.com/thatguystone/verbinator',
+		'path': '../verbinator',
+	},
 }
 
 sums = {}
@@ -45,7 +123,7 @@ sums = {}
 minest = sys.maxsize
 maxest = 0
 
-for name, path in repos.items():
+for name, deets in repos.items():
 	p = subprocess.Popen([
 		'git', 'log',
 		'--author=andrew@clovar.com',
@@ -53,7 +131,7 @@ for name, path in repos.items():
 		'--pretty=tformat:', '--numstat',
 		'--all'],
 		stdout=subprocess.PIPE,
-		cwd=os.path.expanduser(path))
+		cwd=os.path.expanduser(deets['path']))
 
 	sum = 0
 	for l in p.stdout:
@@ -63,7 +141,10 @@ for name, path in repos.items():
 			sum += int(parts[0])
 			sum += int(parts[1])
 
-	sums[name] = sum
+	sums[name] = {
+		'total': sum,
+		'url': deets['url'],
+	}
 
 	minest = min(minest, sum)
 	maxest = max(maxest, sum)
@@ -72,7 +153,7 @@ scale = (1 / maxest) * 1000
 for name, sum in sums.items():
 	# sum = max(1, int((sum - minest) * scale))
 	# sum = min(100, sum)
-	sums[name] = int(math.log(sum, 3)) * 3
+	sums[name]['total'] = int(math.log(sum['total'], 3)) * 3
 
 expires = datetime.datetime.now() + datetime.timedelta(hours=1)
 sums['acrylic_expires'] = int(expires.timestamp())

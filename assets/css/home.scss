@@ -55,6 +55,10 @@
 	margin: 0 auto;
 	position: relative;
 	width: 300px;
+
+	span {
+		cursor: pointer;
+	}
 }
 
 #recent {
