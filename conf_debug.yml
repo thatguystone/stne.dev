@@ -23,7 +23,7 @@ js:
   - js/gallery.js
 
 css:
-  - css/lib/bootstrap-3.3.5.css
+  - css/lib/bootstrap.scss
   - css/lib/github-gist.css
   - css/lib/swipebox.scss
   - css/main.scss
