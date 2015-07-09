@@ -18,14 +18,11 @@
 	<header>
 		<nav>
 			<div class="container">
-				<div class="col-xs-3 col-sm-4 col-md-3 col-md-offset-1 col-lg-offset-2">
-					<a href="/" class="name">
-						<span class="hidden-xs">Andrew Stone</span>
-						<span class="visible-xs">AStone</span>
-					</a>
+				<div class="logo col-sm-4 col-md-3 col-md-offset-1 col-lg-offset-2">
+					<a href="/" class="name">Andrew Stone</a>
 				</div>
-				<div class="col-xs-9 col-sm-8 col-md-7 col-lg-5">
-					<ul class="nav nav-pills">
+				<div class="col-sm-8 col-md-7 col-lg-5">
+					<ul class="nav nav-pills navbar-collapse">
 						{% for item in ac.Cfg().Nav %}
 							<li{% if page.Cat == item.URL %} class="active"{% endif %}>
 								<a href="/{{ item.URL }}/">

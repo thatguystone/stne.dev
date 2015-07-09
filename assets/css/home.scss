@@ -1,29 +1,35 @@
+@import "lib/bootstrap-sass-3.3.5/variables";
+
 @mixin image-set($set...) {
 	background-image: -webkit-image-set($set);
 	background-image:    -moz-image-set($set);
 	background-image:         image-set($set);
 }
 
+$hero-sm-h: 240px;
+$hero-md-h: 350px;
+$hero-lg-h: 450px;
+
 @mixin hero-background($src) {
-	@media (max-width: 768px) {
+	@media (max-width: $screen-xs-max) {
 		@include image-set(
 			url("/assets/img/" + $src + ".768x500c.jpg") 1x,
 			url("/assets/img/" + $src + ".1536x500c.jpg") 2x);
 	}
 
-	@media (min-width: 768px) {
+	@media (min-width: $screen-sm-min) {
 		@include image-set(
 			url("/assets/img/" + $src + ".992x500c.jpg") 1x,
 			url("/assets/img/" + $src + ".1984x500c.jpg") 2x);
 	}
 
-	@media (min-width: 992px) {
+	@media (min-width: $screen-md-min) {
 		@include image-set(
 			url("/assets/img/" + $src + ".1200x500c.jpg") 1x,
 			url("/assets/img/" + $src + ".2400x500c.jpg") 2x);
 	}
 
-	@media (min-width: 1200px) {
+	@media (min-width: $screen-lg-min) {
 		@include image-set(
 			url("/assets/img/" + $src + ".1600x500c.jpg") 1x,
 			url("/assets/img/" + $src + ".3200x500c.jpg") 2x);
@@ -34,8 +40,19 @@
 	background: url("/assets/img/swimming.1200x500c.jpg");
 	background-position: center;
 	background-size: cover;
-	height: 500px;
 	margin-bottom: -15px;
+
+	@media (max-width: $screen-xs-max), (min-width: $screen-sm-min) {
+		height: $hero-sm-h;
+	}
+
+	@media (min-width: $screen-md-min) {
+		height: $hero-md-h;
+	}
+
+	@media (min-width: $screen-lg-min) {
+		height: $hero-lg-h;
+	}
 
 	@include hero-background("swimming");
 }

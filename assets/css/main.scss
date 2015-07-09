@@ -1,3 +1,4 @@
+@import "lib/bootstrap-sass-3.3.5/variables";
 $header_size: 70px;
 
 body {
@@ -15,8 +16,47 @@ header {
 	}
 
 	nav {
-		height: $header_size;
-		line-height: $header_size;
+		@media (max-width: $screen-xs-max) {
+			height: 140px;
+			line-height: 60px;
+
+			li {
+				line-height: 60px;
+			}
+		}
+
+		@media (max-width: 640px) {
+			ul {
+				margin-top: -10px;
+			}
+
+			li {
+				line-height: 40px;
+			}
+		}
+
+		@media (min-width: 641px) {
+			height: $header_size;
+			line-height: $header_size;
+
+			.logo {
+				float: left;
+			}
+
+			ul {
+				float: right;
+			}
+
+			li {
+				line-height: $header_size;
+			}
+		}
+
+		@media (min-width: $screen-sm-min) {
+			height: $header_size;
+			line-height: $header_size;
+		}
+
 		border-bottom: 1px solid #f0f0f0;
 		background: #fcfcfc;
 	}
