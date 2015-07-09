@@ -30,8 +30,8 @@
 {% macro pic_src(img, dim, crop, quality, vw) export %}
 
 <source
-	media="({% if vw == VW_XS %}max{% else %}min{% endif %}-width: {{ vw }}px)"
-	srcset="{{ img.Scale(dim.W, dim.H, crop, quality) }} 1x, {{ img.Scale(dim.W * 2, dim.H * 2, crop, quality) }} 2x, {{ img.Scale(dim.W * 3, dim.H * 3, crop, quality) }} 3x" />
+	media="({% if vw == 767 %}max{% else %}min{% endif %}-width: {{ vw }}px)"
+	srcset="{{ img.Scale(dim.W, dim.H, crop, quality) }} 1x, {{ img.Scale(dim.W * 2, dim.H * 2, crop, quality) }} 2x, {{ img.Scale(dim.W * 3, dim.H * 3, crop, quality) }} 3x">
 
 {% endmacro %}
 
@@ -56,7 +56,7 @@
 {% macro pimg(src) export %}
 
 <p class="img">
-	{{ img(src, ac.Dims(560, 0, 560, 0, 420, 0, 280, 0)) }}
+	{{ img(src, ac.Dims(560, 0, 560, 0, 420, 0, 280, 0), false, 92) }}
 </p>
 
 {% endmacro %}
