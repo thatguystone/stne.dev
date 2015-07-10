@@ -68,20 +68,3 @@
 </div>
 
 {% endmacro %}
-
-{% macro pgif(src) export %}
-
-{% set img = ac.Img(src) %}
-{% set src = img.Scale(0, 0, false, 0) %}
-
-<p class="img">
-	<a href="{{ src }}" class="swipebox">
-		<img src="{{ src }}"
-			title="{{ img.Title }}"
-			alt="{{ img.Title }}"
-			class="gif" />
-	</a>
-</p>
-
-{% endmacro %}
-
