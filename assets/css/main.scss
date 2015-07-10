@@ -1,4 +1,4 @@
-@import "lib/bootstrap-sass-3.3.5/variables";
+@import "lib/bootstrap-sass-3.3.5/bootstrap/variables";
 $header_size: 70px;
 
 body {
@@ -94,10 +94,6 @@ header {
 	h1, time {
 		margin-top: 15px;
 	}
-}
-
-p.img {
-	text-align: center;
 }
 
 .prev-next {

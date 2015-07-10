@@ -1,4 +1,4 @@
-@import "lib/bootstrap-sass-3.3.5/variables";
+@import "lib/bootstrap-sass-3.3.5/bootstrap/variables";
 
 @mixin image-set($set...) {
 	background-image: -webkit-image-set($set);

@@ -30,8 +30,13 @@
 {% macro pic_src(img, dim, crop, quality, vw) export %}
 
 <source
-	media="({% if vw == 767 %}max{% else %}min{% endif %}-width: {{ vw }}px)"
-	srcset="{{ img.Scale(dim.W, dim.H, crop, quality) }} 1x, {{ img.Scale(dim.W * 2, dim.H * 2, crop, quality) }} 2x, {{ img.Scale(dim.W * 3, dim.H * 3, crop, quality) }} 3x">
+	media="({% if vw == 550 %}max{% else %}min{% endif %}-width: {{ vw }}px)"
+{% if img.IsGif() %}
+	srcset="{{ img.Scale(dim.W, dim.H, crop, quality) }} 1x"
+{% else %}
+	srcset="{{ img.Scale(dim.W, dim.H, crop, quality) }} 1x, {{ img.Scale(dim.W * 2, dim.H * 2, crop, quality) }} 2x{% if vw < 992 %}, {{ img.Scale(dim.W * 3, dim.H * 3, crop, quality) }} 3x{% endif %}"
+{% endif %}
+	/>
 
 {% endmacro %}
 
@@ -40,12 +45,12 @@
 {% set img = ac.Img(src) %}
 <a href="{{ img.Scale(0, 0, false, 0) }}" class="swipebox">
 	<picture>
-		{{ pic_src(img, dims.L, crop, quality, 1200) }}
-		{{ pic_src(img, dims.M, crop, quality, 992) }}
-		{{ pic_src(img, dims.S, crop, quality, 768) }}
-		{{ pic_src(img, dims.XS, crop, quality, 767) }}
+		{{ pic_src(img, dims.LG, crop, quality, 1200) }}
+		{{ pic_src(img, dims.MD, crop, quality, 992) }}
+		{{ pic_src(img, dims.SM, crop, quality, 551) }}
+		{{ pic_src(img, dims.XS, crop, quality, 550) }}
 
-		<img src="{{ img.Scale(dims.L.W, dims.L.H, crop, quality) }}"
+		<img src="{{ img.Scale(dims.LG.W, dims.LG.H, crop, quality) }}"
 			title="{{ img.Title }}"
 			alt="{{ img.Title }}" />
 	</picture>
@@ -55,8 +60,27 @@
 
 {% macro pimg(src) export %}
 
+<div class="thumbnail img">
+	{{ img(src, ac.Dims(540, 0, 540, 0, 440, 0, 220, 0), false, 92) }}
+
+	{% set title = ac.Img(src).Title %}
+	{% if title %}<div class="caption">{{ title }}</div>{% endif %}
+</div>
+
+{% endmacro %}
+
+{% macro pgif(src) export %}
+
+{% set img = ac.Img(src) %}
+{% set src = img.Scale(0, 0, false, 0) %}
+
 <p class="img">
-	{{ img(src, ac.Dims(560, 0, 560, 0, 420, 0, 280, 0), false, 92) }}
+	<a href="{{ src }}" class="swipebox">
+		<img src="{{ src }}"
+			title="{{ img.Title }}"
+			alt="{{ img.Title }}"
+			class="gif" />
+	</a>
 </p>
 
 {% endmacro %}
