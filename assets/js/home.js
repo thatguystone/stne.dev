@@ -11,7 +11,9 @@ $(function() {
 			gridSize: 5,
 			list: wordCloudData.data,
 			click: function(item) {
-				window.open(item[2]);
+				if (item[2]) {
+					window.open(item[2]);
+				}
 			}
 		});
 	}
