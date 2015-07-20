@@ -65,7 +65,7 @@ repos = {
 		'path': '../murmur',
 	},
 	'ohmyrss': {
-		'url': 'https://github.com/thatguystone/ohmyrss',
+		'url': 'https://ohmyrss.com',
 		'path': go + '/ohmyrss',
 	},
 	'optimus': {
