@@ -3,7 +3,7 @@ debug:
 
 publish: closure-compiler.jar
 	acrylic conf_debug.yml conf_publish.yml
-	rsync -av --delete public/ stoney.io:/var/www/stoney.io/
+	rsync -av --delete public/ stoney.io:/var/www/stoney.io/www
 
 closure-compiler.jar:
 	wget http://dl.google.com/closure-compiler/compiler-latest.zip

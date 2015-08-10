@@ -126,6 +126,7 @@ maxest = 0
 for name, deets in repos.items():
 	p = subprocess.Popen([
 		'git', 'log',
+		'--author=a@stoney.io',
 		'--author=andrew@clovar.com',
 		'--author=andrewstone@clearchannel.com',
 		'--pretty=tformat:', '--numstat',
