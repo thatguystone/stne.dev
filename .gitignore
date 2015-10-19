@@ -1,3 +1,4 @@
 .cache/
+.sass-cache/
 closure-compiler.jar
 public/
