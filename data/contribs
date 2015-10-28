@@ -24,9 +24,9 @@ repos = {
 		'url': 'https://github.com/thatguystone/arduino',
 		'path': '../arduino',
 	},
-	'assert': {
-		'url': 'https://github.com/thatguystone/assert',
-		'path': go + '/assert',
+	'cog': {
+		'url': 'https://github.com/thatguystone/cog',
+		'path': go + '/cog',
 	},
 	'debs': {
 		'url': 'https://github.com/thatguystone/debs',

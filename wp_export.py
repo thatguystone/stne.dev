@@ -29,7 +29,7 @@ title: "{title}"
 
 {{% block post %}}
 
-<!-- >8 more -->
+<!--more-->
 
 {content}
 
