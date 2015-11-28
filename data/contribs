@@ -112,6 +112,10 @@ repos = {
 		'url': 'https://github.com/thatguystone/swan',
 		'path': go + '/swan',
 	},
+	'vault': {
+		'url': 'https://github.com/thatguystone/vault',
+		'path': '../vault/',
+	},
 	'verbinator': {
 		'url': 'https://github.com/thatguystone/verbinator',
 		'path': '../../NYU/verbinator/',
