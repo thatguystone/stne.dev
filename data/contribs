@@ -34,7 +34,7 @@ repos = {
 	},
 	'ffmpeg': {
 		'url': 'https://github.com/thatguystone/FFmpeg',
-		'path': go_ihr + '/optimus/lib/ffmpeg',
+		'path': '../../IHR/liboav/lib/ffmpeg',
 	},
 	'gocovr': {
 		'url': 'https://github.com/thatguystone/gocovr',
@@ -74,7 +74,7 @@ repos = {
 	},
 	'paratec': {
 		'url': 'https://github.com/thatguystone/paratec',
-		'path': go_ihr + '/optimus/lib/paratec',
+		'path': '../paratec',
 	},
 	'pontoon': {
 		'url': '',
@@ -86,7 +86,7 @@ repos = {
 	},
 	'quick.io': {
 		'url': 'https://github.com/iheartradio/quick.io',
-		'path': '../../IHR/quick.io/quick.io',
+		'path': go_ihr + '/quick.io',
 	},
 	'quickigo': {
 		'url': 'https://github.com/iheartradio/quickigo',
