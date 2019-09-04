@@ -1,7 +1,0 @@
-debug: False
-siteURL: 'http://stoney.io'
-
-jscompiler:
-  - java
-  - -jar
-  - closure-compiler.jar

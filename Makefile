@@ -1,15 +1,9 @@
 debug:
-	acrylic conf_debug.yml
+	go run ./site
 
-publish: closure-compiler.jar
-	acrylic conf_debug.yml conf_publish.yml
-	rsync -av --delete public/ stoney.io:/var/www/stoney.io/www
-
-closure-compiler.jar:
-	wget http://dl.google.com/closure-compiler/compiler-latest.zip
-	unzip compiler-latest.zip compiler.jar
-	rm compiler-latest.zip
-	mv compiler.jar $@
+publish:
+	go run ./site crawl
 
 clean:
 	rm -rf public/
+	rm -rf .cache/
