@@ -1,9 +1,2 @@
-debug:
-	go run ./site
-
 publish:
-	go run ./site crawl
-
-clean:
-	rm -rf public/
-	rm -rf .cache/
+	rsync -av --progress --delete ./public/ stne.dev:/var/www/stne.dev/www/
